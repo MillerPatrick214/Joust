@@ -3,16 +3,24 @@ using System;
 
 public partial class NetManager : Node
 {
-	[Export]
-	int MaxClients = 10;
 
+	/*
+	Should not be an autoload as every player scene added to game should carry one to manage net status
+	*/
+
+	[Export]
+	private int _maxCLients = 10;
+	private Control _ui;
 	private Button _joinBtn;
 	private Button _hostBtn;
+	private Node _level;
 
 	public override void _Ready()
 	{
-		_joinBtn = GetNodeOrNull<Button>("VBoxContainer2/HBoxContainer/Join");
-		_hostBtn = GetNodeOrNull<Button>("VBoxContainer2/HBoxContainer2/Host");
+		_ui = GetNodeOrNull<Control>("UI");
+		_joinBtn = GetNodeOrNull<Button>("UI/VBoxContainer2/HBoxContainer/Join");
+		_hostBtn = GetNodeOrNull<Button>("UI/VBoxContainer2/HBoxContainer2/Host");
+		_level = GetNodeOrNull<Node>("Level");
 
 		if (_joinBtn == null || _hostBtn == null)
         {
@@ -30,12 +38,11 @@ public partial class NetManager : Node
             // Send a test RPC as soon as we connect.
             Rpc(nameof(Ping), Multiplayer.GetUniqueId());
         };
+		
         Multiplayer.ConnectionFailed += () => GD.PushWarning("Connection failed.");
 		Multiplayer.ServerDisconnected += () => GD.PushWarning("Disconnected from server.");
-		
-
     }
-	
+
 	[Rpc] // makes this callable over the network
 	private void Ping(int fromId)
 	{
@@ -45,47 +52,71 @@ public partial class NetManager : Node
 
     private void StartServer()
 	{
-		LineEdit _hostPort = GetNodeOrNull<LineEdit>("VBoxContainer2/HBoxContainer2/Port");
-		int Port = _hostPort.Text.ToInt();
-		
-        try
-        {
-            var peer = new ENetMultiplayerPeer();
-            peer.CreateServer(Port, MaxClients);
-            Multiplayer.MultiplayerPeer = peer;
+		LineEdit hostPort = GetNodeOrNull<LineEdit>("UI/VBoxContainer2/HBoxContainer2/Port");
+		int Port = hostPort.Text.ToInt();
 
-            // The server is the authority by default (ID = 1).
-            GD.Print($"Server started on {Port}. My ID: {Multiplayer.GetUniqueId()}");
-            _hostBtn.Disabled = true;
-        }
-        catch (Exception e)
-        {
-            GD.PushWarning($"SERVER HOSTING FAILED: {e}");
-        }
+		try
+		{
+			var peer = new ENetMultiplayerPeer();
+			peer.CreateServer(Port, _maxCLients);
+			Multiplayer.MultiplayerPeer = peer;
+
+			// The server is the authority by default (ID = 1).
+			GD.Print($"Server started on {Port}. My ID: {Multiplayer.GetUniqueId()}");
+			_hostBtn.Disabled = true;
+		}
+		catch (Exception e)
+		{
+			GD.PushWarning($"SERVER HOSTING FAILED: {e}");
+			return;
+		}
+		StartGame();
     }
 
 	private void CreateClient()
-		{
-		LineEdit joinIP = GetNodeOrNull<LineEdit>("VBoxContainer2/HBoxContainer/IP");
-		LineEdit joinPort = GetNodeOrNull<LineEdit>("VBoxContainer2/HBoxContainer/Port");
+	{
+		LineEdit joinIP = GetNodeOrNull<LineEdit>("UI/VBoxContainer2/HBoxContainer/IP");
+		LineEdit joinPort = GetNodeOrNull<LineEdit>("UI/VBoxContainer2/HBoxContainer/Port");
 
 		string serverAddress = joinIP.Text;
 		int port = joinPort.Text.ToInt();
-		
-			try
-			{
-				var peer = new ENetMultiplayerPeer();
-				peer.CreateClient(serverAddress, port);
-				Multiplayer.MultiplayerPeer = peer;
 
-				GD.Print($"Connecting to {serverAddress}:{port}…");
-				_joinBtn.Disabled = true;
-			}
-			catch (Exception e)
-			{
-				GD.PushWarning($"CLIENT CONNECT FAILED: {e}");
-				_joinBtn.Disabled = false;
-			}
+		try
+		{
+			var peer = new ENetMultiplayerPeer();
+			peer.CreateClient(serverAddress, port);
+			Multiplayer.MultiplayerPeer = peer;
+
+			GD.Print($"Connecting to {serverAddress}:{port}…");
+			_joinBtn.Disabled = true;
 		}
-		
+		catch (Exception e)
+		{
+			GD.PushWarning($"CLIENT CONNECT FAILED: {e}");
+			_joinBtn.Disabled = false;
+			return;
+		}
+		StartGame();
+	}
+
+	private void StartGame()
+	{
+		_ui.Hide();
+
+		if (Multiplayer.IsServer())
+		{
+			CallDeferred(nameof(ChangeLevel), GD.Load("res://Levels/Level/World.tscn"));
+		}
+	}
+	
+	private void ChangeLevel(PackedScene scene)
+    {
+		foreach (Node currLevel in _level.GetChildren())
+		{
+			_level.RemoveChild(currLevel);
+			currLevel.QueueFree();
+		}
+		_level.AddChild(scene.Instantiate());
+    }
+	
 }
