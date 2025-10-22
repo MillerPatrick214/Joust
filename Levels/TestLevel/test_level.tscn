@@ -18,7 +18,8 @@ shape = SubResource("BoxShape3D_hsoxx")
 disabled = true
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.086266, 0.104675, -0.166961)
 mesh = SubResource("BoxMesh_gojnm")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0.50379264, 3.496266, 0.2843477)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.503793, 3.49627, 0.284348)
