@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://c4up5yyoq3t4g"]
+
+[ext_resource type="ArrayMesh" uid="uid://mvo2cleqpker" path="res://Levels/TestLevel/Assets/Mud/Mud.res" id="1_wjxfx"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_eko1c"]
+size = Vector3(50, 0.5, 50)
+
+[node name="GroundStaticBody3D" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_eko1c")
+disabled = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = ExtResource("1_wjxfx")

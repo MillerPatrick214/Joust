@@ -1,24 +1,32 @@
-[gd_scene load_steps=4 format=3 uid="uid://mmnl8lnjrasv"]
+[gd_scene load_steps=5 format=3 uid="uid://mmnl8lnjrasv"]
+
+[ext_resource type="ArrayMesh" uid="uid://mvo2cleqpker" path="res://Levels/TestLevel/Assets/Mud/Mud.res" id="1_brg3y"]
+[ext_resource type="PackedScene" uid="uid://b7qn6mmf4getv" path="res://Player/Player/Player.tscn" id="1_sn3da"]
+[ext_resource type="PackedScene" uid="uid://dlvxg8weah262" path="res://Items/Weapons/Sword/sword.tscn" id="3_0cvxl"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hsoxx"]
-size = Vector3(50, 0.5, 50)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hsoxx"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_gojnm"]
-material = SubResource("StandardMaterial3D_hsoxx")
-size = Vector3(50, 0.5, 50)
+size = Vector3(150, 2, 150)
 
 [node name="TestLevel" type="Node3D"]
 
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
+[node name="Ground" type="StaticBody3D" parent="."]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_hsoxx")
-disabled = true
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-mesh = SubResource("BoxMesh_gojnm")
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 100, 0, 0, 0)
+mesh = ExtResource("1_brg3y")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0.50379264, 3.496266, 0.2843477)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.503793, 3.49627, 0.284348)
+
+[node name="Player" parent="." node_paths=PackedStringArray("HeldItem") instance=ExtResource("1_sn3da")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.146344, 0)
+Speed = 10
+FallAcceleration = 10
+HeldItem = NodePath("../Sword")
+
+[node name="Sword" parent="." instance=ExtResource("3_0cvxl")]
+transform = Transform3D(1, 0, 0, 0, -0.1314952, -0.99131674, 0, 0.99131674, -0.1314952, 0.35253328, 1.1854935, -0.17460239)
