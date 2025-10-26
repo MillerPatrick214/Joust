@@ -5,6 +5,6 @@ public partial class PhysicalBoneSimulator3d : PhysicalBoneSimulator3D
 {
     public override void _Ready()
     {
-        PhysicalBonesStartSimulation();
+        // PhysicalBonesStartSimulation(); // currently in BoneHandler
     }
 }

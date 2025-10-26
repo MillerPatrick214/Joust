@@ -29,4 +29,4 @@ FallAcceleration = 10
 HeldItem = NodePath("../Sword")
 
 [node name="Sword" parent="." instance=ExtResource("3_0cvxl")]
-transform = Transform3D(1, 0, 0, 0, -0.1314952, -0.99131674, 0, 0.99131674, -0.1314952, 0.35253328, 1.1854935, -0.17460239)
+transform = Transform3D(1, 0, 0, 0, -0.1314952, -0.99131674, 0, 0.99131674, -0.1314952, 0.35253328, 1.1854935, -1.165175)
