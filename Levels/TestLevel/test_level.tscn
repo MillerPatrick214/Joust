@@ -9,7 +9,12 @@ size = Vector3(150, 2, 150)
 
 [node name="TestLevel" type="Node3D"]
 
+[node name="Player" parent="." instance=ExtResource("1_sn3da")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1282928, 0)
+
 [node name="Ground" type="StaticBody3D" parent="."]
+collision_layer = 5
+collision_mask = 5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
@@ -21,12 +26,6 @@ mesh = ExtResource("1_brg3y")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.503793, 3.49627, 0.284348)
-
-[node name="Player" parent="." node_paths=PackedStringArray("HeldItem") instance=ExtResource("1_sn3da")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.146344, 0)
-Speed = 10
-FallAcceleration = 10
-HeldItem = NodePath("../Sword")
 
 [node name="Sword" parent="." instance=ExtResource("3_0cvxl")]
 transform = Transform3D(1, 0, 0, 0, -0.1314952, -0.99131674, 0, 0.99131674, -0.1314952, 0.35253328, 1.1854935, -1.165175)
