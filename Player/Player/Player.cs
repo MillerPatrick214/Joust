@@ -18,7 +18,7 @@ public partial class Player : CharacterBody3D
     public override void _Ready()
     {
         Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
-        Input.MouseMode = Input.MouseModeEnum.Confined;
+        //Input.MouseMode = Input.MouseModeEnum.Confined;
         _animPlayer = GetNodeOrNull<AnimationPlayer>("Armature/Skeleton3D/AnimationPlayer");
         _animPlayer.Play("Armature|Run");
         _animPlayer.Active = true;
@@ -26,7 +26,7 @@ public partial class Player : CharacterBody3D
 
     public override void _Input(InputEvent @e)
     {
-        if (@e.IsActionPressed("pause")) GetTree().Quit();
+        if (@e.IsActionPressed("pause")) GetTree().Quit(); 
 
     }
 
