@@ -13,10 +13,15 @@ public partial class Player : CharacterBody3D
     private Vector3 _targetVelocity = Vector3.Zero;
     private Vector2 _mouse;
 
+    private AnimationPlayer _animPlayer;
+
     public override void _Ready()
     {
         Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
         Input.MouseMode = Input.MouseModeEnum.Confined;
+        _animPlayer = GetNodeOrNull<AnimationPlayer>("Armature/Skeleton3D/AnimationPlayer");
+        _animPlayer.Play("Armature|Run");
+        _animPlayer.Active = true;
     }
 
     public override void _Input(InputEvent @e)

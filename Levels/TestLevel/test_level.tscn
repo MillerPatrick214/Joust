@@ -1,16 +1,13 @@
 [gd_scene load_steps=5 format=3 uid="uid://mmnl8lnjrasv"]
 
 [ext_resource type="ArrayMesh" uid="uid://mvo2cleqpker" path="res://Levels/TestLevel/Assets/Mud/Mud.res" id="1_brg3y"]
-[ext_resource type="PackedScene" uid="uid://b7qn6mmf4getv" path="res://Player/Player/Player.tscn" id="1_sn3da"]
 [ext_resource type="PackedScene" uid="uid://dlvxg8weah262" path="res://Items/Weapons/Sword/sword.tscn" id="3_0cvxl"]
+[ext_resource type="PackedScene" uid="uid://c4f4fvlpdtr80" path="res://Player/Player/AnimatedHumanModel/AnimatedHumanPlayer.tscn" id="3_up0yw"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hsoxx"]
 size = Vector3(150, 2, 150)
 
 [node name="TestLevel" type="Node3D"]
-
-[node name="Player" parent="." instance=ExtResource("1_sn3da")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1282928, 0)
 
 [node name="Ground" type="StaticBody3D" parent="."]
 collision_layer = 5
@@ -29,3 +26,5 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.5037
 
 [node name="Sword" parent="." instance=ExtResource("3_0cvxl")]
 transform = Transform3D(1, 0, 0, 0, -0.1314952, -0.99131674, 0, 0.99131674, -0.1314952, 0.35253328, 1.1854935, -1.165175)
+
+[node name="Player" parent="." instance=ExtResource("3_up0yw")]
