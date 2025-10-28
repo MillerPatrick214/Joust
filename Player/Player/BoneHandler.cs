@@ -55,8 +55,6 @@ public partial class BoneHandler : Node3D
 
 
         foreach (var pb in _bones) { 
-            
-            PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
 
             int pbID = pb.GetBoneId();
 
@@ -74,26 +72,26 @@ public partial class BoneHandler : Node3D
             Vector3 force = posErr * LinearStiffness + (-pb.LinearVelocity) * LinearDampening;
             //GD.Print($"force: {force}");
             if (force.Length() > MaxLinearForce) force = force.Normalized() * MaxLinearForce;
-            Vector3 localForce = pb.GlobalTransform.Basis.Inverse() * force;
             PhysicsServer3D.BodyApplyCentralForce(pb.GetRid(), force);
 
-            Quaternion currentQuat = new Quaternion(currentPose.Basis.Orthonormalized());
-            Quaternion targetQuat = new Quaternion(targetPose.Basis.Orthonormalized());
+        //     Quaternion currentQuat = new Quaternion(currentPose.Basis.Orthonormalized());
+        //     Quaternion targetQuat = new Quaternion(targetPose.Basis.Orthonormalized());
         
-            // Calculate rotation error quaternion
-            Quaternion errorQuat = (targetQuat * currentQuat.Inverse()).Normalized();
+        //     // Calculate rotation error quaternion
+        //     Quaternion errorQuat = (targetQuat * currentQuat.Inverse()).Normalized();
             
-            // Convert to axis-angle
-            Vector3 axis = errorQuat.GetAxis();
-            float angle = errorQuat.GetAngle();
-            GD.Print($"axis: {axis}");
-            GD.Print($"angle: {angle}");
+        //     // Convert to axis-angle
+        //     Vector3 axis = errorQuat.GetAxis();
+        //     float angle = errorQuat.GetAngle();
+        //     GD.Print($"axis: {axis}");
+        //     GD.Print($"angle: {angle}");
             
-            Vector3 torque = axis * angle * AngularStiffness - pb.AngularVelocity * AngularDampening;
-            if (torque.Length() > MaxTorque) torque = torque.Normalized() * MaxTorque;
-            PhysicsServer3D.BodyApplyTorque(pb.GetRid(), torque);
-            
+        //     Vector3 torque =  errorQuat.GetEuler() * AngularStiffness - pb.AngularVelocity * AngularDampening;
+        //     if (torque.Length() > MaxTorque) torque = torque.Normalized() * MaxTorque;
+        //     PhysicsServer3D.BodyApplyTorque(pb.GetRid(), torque);
+        // 
         }
+
     }
 }
 
