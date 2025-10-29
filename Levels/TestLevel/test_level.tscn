@@ -2,7 +2,7 @@
 
 [ext_resource type="ArrayMesh" uid="uid://mvo2cleqpker" path="res://Levels/TestLevel/Assets/Mud/Mud.res" id="1_brg3y"]
 [ext_resource type="PackedScene" uid="uid://dlvxg8weah262" path="res://Items/Weapons/Sword/sword.tscn" id="3_0cvxl"]
-[ext_resource type="PackedScene" uid="uid://c4f4fvlpdtr80" path="res://Player/Player/AnimatedHumanModel/AnimatedHumanPlayer.tscn" id="3_up0yw"]
+[ext_resource type="PackedScene" uid="uid://c4f4fvlpdtr80" path="res://Player/Player/Player.tscn" id="3_up0yw"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hsoxx"]
 size = Vector3(150, 2, 150)
