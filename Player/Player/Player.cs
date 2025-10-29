@@ -5,7 +5,7 @@ using Godot.Collections;
 public partial class Player : CharacterBody3D
 {
 
-    [Export] public float Speed { get; set; } = 1f;
+    [Export] public float Speed { get; set; } = 15f;
     [Export] public float FallAcceleration { get; set; } = 9.8f;
 
     [Export] public RigidBody3D HeldItem;
