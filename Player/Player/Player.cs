@@ -1,7 +1,11 @@
 // Player.cs
 using Godot;
 using System;
+<<<<<<< Updated upstream
 
+=======
+using Godot.Collections;
+>>>>>>> Stashed changes
 public partial class Player : CharacterBody3D
 {
 	public const float Speed = 5.0f;
@@ -45,6 +49,7 @@ public partial class Player : CharacterBody3D
 		}
 	}
 
+<<<<<<< Updated upstream
 	private void SetupCamera()
 	{
 		if (PlayerID == Multiplayer.GetUniqueId())
@@ -54,6 +59,36 @@ public partial class Player : CharacterBody3D
 		}
 	}
 	
+=======
+    public AnimationPlayer AnimPlayer;
+
+    private BoneAttachment3D _rHandBoneAttachement;
+
+    private RigidBody3D _equipped;
+
+
+    //private GodotIKEffector _rHandEffector;
+    //private GodotIKEffector _lHandEffector; 
+
+    public override void _Ready()
+    {
+        Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
+        //Input.MouseMode = Input.MouseModeEnum.Confined;
+        AnimPlayer = GetNodeOrNull<AnimationPlayer>("AnimationPlayer");
+
+        _rHandBoneAttachement = GetNodeOrNull<BoneAttachment3D>("BoneHandler/Skeleton3D/Bone Attachment Hand_R");
+        if (_rHandBoneAttachement.GetChildCount() > 0 && _rHandBoneAttachement.GetChild(0) is RigidBody3D equippedBody)
+        {
+            EquipWeapon(equippedBody);
+        }
+    }
+
+    public override void _Input(InputEvent @e)
+    {
+        if (@e.IsActionPressed("pause")) GetTree().Quit(); 
+
+    }
+>>>>>>> Stashed changes
 
     public override void _PhysicsProcess(double delta)
     {
@@ -62,8 +97,13 @@ public partial class Player : CharacterBody3D
         if (!IsOnFloor())
             velocity += GetGravity() * (float)delta;
 
+<<<<<<< Updated upstream
         if (_playerInput.jumping && IsOnFloor())
             velocity.Y = JumpVelocity;
+=======
+        if (!IsOnFloor()) _targetVelocity.Y -= FallAcceleration * (float)delta;
+        
+>>>>>>> Stashed changes
 
         _playerInput.jumping = false;
 
@@ -84,4 +124,20 @@ public partial class Player : CharacterBody3D
         Velocity = velocity;
         MoveAndSlide();
     }
+<<<<<<< Updated upstream
+=======
+
+    public void EquipWeapon(RigidBody3D Equipped)
+    {
+        if (_equipped != null)
+        {
+            _equipped = Equipped;
+
+        }
+
+    }
+
+    
+
+>>>>>>> Stashed changes
 }
