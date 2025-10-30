@@ -7,16 +7,15 @@ public partial class BoneHandler : Node3D
     [Export] public Skeleton3D PhysicsSkeleton;
     [Export] public Skeleton3D DisplaySkeleton;
 
-    [ExportGroup("Linear Controls")]
+    [ExportGroup("Linear Controls")]                    
     [Export] public float LinearStiffness = 1200f;
     [Export] public float LinearDampening = 40f;
     [Export] public float MaxLinearForce = 9999f;
 
     [ExportGroup("Angular Controls")]
-
-    [Export] public float AngularStiffness = 4000f;
-    [Export] public float AngularDampening = 80f;
-    [Export] public float MaxTorque = 9999f;
+    [Export] public float AngularStiffness = 1750.0f;
+    [Export] public float AngularDampening = 30.0f;
+    [Export] public float MaxTorque = 2000.0f;
 
     [ExportGroup("Stability")]
     [Export] public float MaxPositionError = 1f; // Clamp extreme errors
