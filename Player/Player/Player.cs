@@ -74,6 +74,14 @@ public partial class Player : CharacterBody3D
     //private GodotIKEffector _rHandEffector;
     //private GodotIKEffector _lHandEffector; 
 
+    private BoneAttachment3D _rHandBoneAttachement;
+
+    private RigidBody3D _equipped;
+
+
+    //private GodotIKEffector _rHandEffector;
+    //private GodotIKEffector _lHandEffector; 
+
     public override void _Ready()
     {
         Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
