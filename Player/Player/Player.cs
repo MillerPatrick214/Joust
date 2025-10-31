@@ -2,7 +2,11 @@
 using Godot;
 using System;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+using Godot.Collections;
+>>>>>>> Stashed changes
 =======
 using Godot.Collections;
 >>>>>>> Stashed changes
@@ -103,6 +107,9 @@ public partial class Player : CharacterBody3D
 =======
         if (!IsOnFloor()) _targetVelocity.Y -= FallAcceleration * (float)delta;
         
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
         _playerInput.jumping = false;
@@ -139,5 +146,8 @@ public partial class Player : CharacterBody3D
 
     
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
