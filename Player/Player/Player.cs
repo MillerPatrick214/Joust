@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using Godot.Collections;
-
 public partial class Player : CharacterBody3D
 {
 
@@ -16,12 +15,25 @@ public partial class Player : CharacterBody3D
 
     public AnimationPlayer AnimPlayer;
 
+    private BoneAttachment3D _rHandBoneAttachement;
+
+    private RigidBody3D _equipped;
+
+
+    //private GodotIKEffector _rHandEffector;
+    //private GodotIKEffector _lHandEffector; 
+
     public override void _Ready()
     {
         Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
         //Input.MouseMode = Input.MouseModeEnum.Confined;
-        AnimPlayer = GetNodeOrNull<AnimationPlayer>("Armature/Skeleton3D/AnimationPlayer");
-        AnimPlayer.Active = true;
+        AnimPlayer = GetNodeOrNull<AnimationPlayer>("AnimationPlayer");
+
+        _rHandBoneAttachement = GetNodeOrNull<BoneAttachment3D>("BoneHandler/Skeleton3D/Bone Attachment Hand_R");
+        if (_rHandBoneAttachement.GetChildCount() > 0 && _rHandBoneAttachement.GetChild(0) is RigidBody3D equippedBody)
+        {
+            EquipWeapon(equippedBody);
+        }
     }
 
     public override void _Input(InputEvent @e)
@@ -39,9 +51,22 @@ public partial class Player : CharacterBody3D
         _targetVelocity.Z = direction.Z * Speed;
 
         if (!IsOnFloor()) _targetVelocity.Y -= FallAcceleration * (float)delta;
+        
 
         Velocity = _targetVelocity;
         MoveAndSlide();
     }
+
+    public void EquipWeapon(RigidBody3D Equipped)
+    {
+        if (_equipped != null)
+        {
+            _equipped = Equipped;
+
+        }
+
+    }
+
+    
 
 }

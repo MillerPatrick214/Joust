@@ -9,7 +9,7 @@ public partial class Idle : PlayerState
 	public override void Enter(String previousState) { //NOTE -- I have previous state in here but there is no CURRENT functionality. I expect we'll add transitions later on. 
 													   //Animation change goes here 
 		player.Velocity = ZeroVect;
-		player.AnimPlayer.Play("Armature|Idle");
+		//player.AnimPlayer.Play("Armature|Idle");
 		//GD.Print($"Entered Idle movement state.");
 	}
 

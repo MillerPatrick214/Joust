@@ -1,9 +1,12 @@
 using Godot;
 using System;
 
-public partial class PhysicalBoneSimulator3d : PhysicalBoneSimulator3D
+[Tool]
+public partial class StartIk : SkeletonIK3D
 {
     public override void _Ready()
     {
+        Start();
     }
+
 }

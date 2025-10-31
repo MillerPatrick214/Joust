@@ -47,12 +47,11 @@ public partial class Walk : PlayerState
 		}
 		
 		if (Input.IsActionPressed("sprint")) {
-			player.AnimPlayer.Play("Armature|Run");
+
 			velocity.X = direction.X * player.Speed * 2;
         	velocity.Z = direction.Z * player.Speed * 2;
 		}
 		else {
-			player.AnimPlayer.Play("Armature|Walk");
 			velocity.X = direction.X * player.Speed;
         	velocity.Z = direction.Z * player.Speed;
 		}

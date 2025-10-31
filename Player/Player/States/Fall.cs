@@ -27,18 +27,18 @@ public partial class Fall : PlayerState
 		Vector3 forward = player.GlobalTransform.Basis.Z.Normalized(); //foward direction? This shit is confusing me honestly. The reason we need to do this is so we're always moving relative to the camera 
 		Vector3 right = player.GlobalTransform.Basis.X.Normalized(); //Right?
 				
-		if (Input.IsActionPressed("Left")) {
+		if (Input.IsActionPressed("move_left")) {
 			direction -= right;
 		}
-		if (Input.IsActionPressed("Right")) {
+		if (Input.IsActionPressed("move_right")) {
 			direction += right;
 		}
-		if (Input.IsActionPressed("Forward")) {
+		if (Input.IsActionPressed("move_forward")) {
 			direction -= forward;
 			//animation.Play("Back Camera"); 
 			
 		}
-		if (Input.IsActionPressed("Back")) {
+		if (Input.IsActionPressed("move_back")) {
 			direction += forward;
 			//animation.Play("Front Camera");
 		}
