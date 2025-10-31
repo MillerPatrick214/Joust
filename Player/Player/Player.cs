@@ -6,10 +6,6 @@ using System;
 
 =======
 using Godot.Collections;
->>>>>>> Stashed changes
-=======
-using Godot.Collections;
->>>>>>> Stashed changes
 public partial class Player : CharacterBody3D
 {
 	public const float Speed = 5.0f;
@@ -74,14 +70,6 @@ public partial class Player : CharacterBody3D
     //private GodotIKEffector _rHandEffector;
     //private GodotIKEffector _lHandEffector; 
 
-    private BoneAttachment3D _rHandBoneAttachement;
-
-    private RigidBody3D _equipped;
-
-
-    //private GodotIKEffector _rHandEffector;
-    //private GodotIKEffector _lHandEffector; 
-
     public override void _Ready()
     {
         Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
@@ -115,10 +103,6 @@ public partial class Player : CharacterBody3D
 =======
         if (!IsOnFloor()) _targetVelocity.Y -= FallAcceleration * (float)delta;
         
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
         _playerInput.jumping = false;
 
@@ -154,8 +138,4 @@ public partial class Player : CharacterBody3D
 
     
 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 }
