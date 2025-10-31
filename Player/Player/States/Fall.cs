@@ -8,7 +8,7 @@ public partial class Fall : PlayerState
 
 	public override void Enter(String previousState)
 	{
-		player.AnimPlayer.Stop();
+		//player.AnimPlayer.Stop();
 		FallVelocity.Y = 0; 
 	}
 

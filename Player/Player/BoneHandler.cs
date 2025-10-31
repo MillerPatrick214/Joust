@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using Godot;
 
 public partial class BoneHandler : Node3D
@@ -17,6 +18,7 @@ public partial class BoneHandler : Node3D
     [Export] public float AngularDampening = 30.0f;
     [Export] public float MaxTorque = 2000.0f;
 
+
     [ExportGroup("Stability")]
     [Export] public float MaxPositionError = 1f; // Clamp extreme errors
     [Export] public float MaxAngularError = Mathf.Pi; // Clamp to 180 degrees
@@ -26,6 +28,7 @@ public partial class BoneHandler : Node3D
     private Godot.Collections.Array<PhysicalBone3D> _bones = new();
     private Godot.Collections.Dictionary<int, Transform3D> _boneCorrections = new();
     private Godot.Collections.Dictionary<PhysicalBone3D, Transform3D> _previousTargets = new();
+
 
     public override void _Ready()
     {
@@ -123,9 +126,10 @@ public partial class BoneHandler : Node3D
 
             PhysicsServer3D.BodyApplyTorque(pb.GetRid(), torque);
         }
+
     }
 
-    private void WalkHandler()
+    private void DriveBones(double delta)
     {
 
     }
@@ -137,3 +141,4 @@ public partial class BoneHandler : Node3D
         return angle;
     }
 }
+

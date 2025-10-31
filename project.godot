@@ -62,10 +62,6 @@ sprint={
 ]
 }
 
-[layer_names]
-
-3d_physics/layer_3="Bones"
-
 [physics]
 
 3d/physics_engine="Jolt Physics"
