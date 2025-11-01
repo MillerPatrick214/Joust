@@ -67,7 +67,7 @@ public partial class Player : CharacterBody3D
     {
         if (IsStepping) return;
         int rFootBoneId = IKSkeleton.FindBone("Foot.R");
-        int lFootBoneId = IKSkeleton.FindBone("Foot.R");
+        int lFootBoneId = IKSkeleton.FindBone("Foot.L");
         int hipsBoneId = IKSkeleton.FindBone("Hips");
 
         float rFootDistance = IKSkeleton.GetBoneGlobalPose(rFootBoneId)[0].DistanceTo(IKSkeleton.GetBoneGlobalPose(hipsBoneId)[0]);

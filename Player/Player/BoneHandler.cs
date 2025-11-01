@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using Godot;
 
 public partial class BoneHandler : Node3D
@@ -22,6 +21,7 @@ public partial class BoneHandler : Node3D
     [ExportGroup("Stability")]
     [Export] public float MaxPositionError = 1f; // Clamp extreme errors
     [Export] public float MaxAngularError = Mathf.Pi; // Clamp to 180 degrees
+    [Export(PropertyHint.None, "suffix:degrees")] public double MinimumAngleForForce = 2.0f;
 
     private CharacterBody3D _player;
     private PhysicalBoneSimulator3D _sim;
@@ -33,6 +33,7 @@ public partial class BoneHandler : Node3D
     public override void _Ready()
     {
         PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
+        IKTargetSkeleton.SkeletonUpdated += DriveBones;
         _player = GetParent<CharacterBody3D>();
 
         foreach (var c in PhysicsSkeleton.GetChildren())
@@ -58,13 +59,17 @@ public partial class BoneHandler : Node3D
         }
 
         _sim.PhysicalBonesStartSimulation();
+        
     }
 
     public override void _PhysicsProcess(double delta)
     {
-        float dt = (float)delta;
-        if (dt <= 0) return;
 
+    }
+    
+    public void DriveBones()
+    {
+        
         foreach (var pb in _bones)
         {
             int pbID = pb.GetBoneId();
@@ -105,17 +110,38 @@ public partial class BoneHandler : Node3D
             }
 
             // === ANGULAR (Rotation) Control ===
-            Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
-
-            // Convert to axis-angle (Euler can have gimbal lock issues, but tutorial uses it)
-            Vector3 angularDisplacement = rotationDifference.GetEuler();
-
-            // Normalize angles to [-PI, PI] range
-            angularDisplacement.X = NormalizeAngle(angularDisplacement.X);
-            angularDisplacement.Y = NormalizeAngle(angularDisplacement.Y);
-            angularDisplacement.Z = NormalizeAngle(angularDisplacement.Z);
-
+            Quaternion currentQuat = new Quaternion(currentPose.Basis.Orthonormalized());
+            Quaternion targetQuat = new Quaternion(correctedTarget.Basis.Orthonormalized());
+            
+            // Normalize quaternions
+            currentQuat = currentQuat.Normalized();
+            targetQuat = targetQuat.Normalized();
+            
+            // Calculate rotation error (shortest path from current to target)
+            Quaternion errorQuat = targetQuat * currentQuat.Inverse();
+            errorQuat = errorQuat.Normalized();
+            
+            // Handle quaternion double-cover (ensure shortest rotation path)
+            if (errorQuat.W < 0)
+            {
+                errorQuat = new Quaternion(-errorQuat.X, -errorQuat.Y, -errorQuat.Z, -errorQuat.W);
+            }
+            
+            // Convert quaternion error to axis-angle representation
+            // This gives us the angular displacement vector
+            Vector3 angularDisplacement = Vector3.Zero;
+            float angle = errorQuat.GetAngle();
+            
+            // Only calculate if angle is significant (avoid numerical issues at small angles)
+            if (angle > 0.001f)
+            {
+                Vector3 axis = errorQuat.GetAxis();
+                angularDisplacement = axis * angle;
+            }
+            
             // Hooke's Law for rotation: T = kθ - cω
+            // k = spring stiffness, θ = angular displacement
+            // c = damping coefficient, ω = angular velocity
             Vector3 torque = (AngularStiffness * angularDisplacement) - (AngularDampening * pb.AngularVelocity);
 
             // Clamp
@@ -124,15 +150,10 @@ public partial class BoneHandler : Node3D
                 torque = torque.Normalized() * MaxTorque;
             }
 
-            PhysicsServer3D.BodyApplyTorque(pb.GetRid(), torque);
         }
-
     }
 
-    private void DriveBones(double delta)
-    {
 
-    }
 
     private float NormalizeAngle(float angle)
     {
