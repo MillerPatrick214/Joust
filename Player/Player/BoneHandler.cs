@@ -28,12 +28,13 @@ public partial class BoneHandler : Node3D
     private Godot.Collections.Array<PhysicalBone3D> _bones = new();
     private Godot.Collections.Dictionary<int, Transform3D> _boneCorrections = new();
     private Godot.Collections.Dictionary<PhysicalBone3D, Transform3D> _previousTargets = new();
+    private Godot.Collections.Dictionary<int, Transform3D> _cachedModifiedPoses = new();
 
 
     public override void _Ready()
     {
         PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
-        IKTargetSkeleton.SkeletonUpdated += DriveBones;
+        IKTargetSkeleton.SkeletonUpdated += OnSkeletonUpdated;
         _player = GetParent<CharacterBody3D>();
 
         foreach (var c in PhysicsSkeleton.GetChildren())
@@ -64,10 +65,23 @@ public partial class BoneHandler : Node3D
 
     public override void _PhysicsProcess(double delta)
     {
-        IKTargetSkeleton.Advance(delta);
+        DriveBones();
+        
 
     }
     
+    private void OnSkeletonUpdated()
+    {
+        // Capture all modified bone poses while they're still applied
+        // This happens right after all IK/modifiers have run
+        foreach (var pb in _bones)
+        {
+            int boneId = pb.GetBoneId();
+            // Get the MODIFIED global pose (includes IK)
+
+            _cachedModifiedPoses[boneId] = IKTargetSkeleton.GetBoneGlobalPose(boneId);
+        }
+    }
     public void DriveBones()
     {
         
@@ -78,7 +92,7 @@ public partial class BoneHandler : Node3D
             if (mass <= 0) mass = 1f;
 
             // Get target pose
-            Transform3D targetPose = IKTargetSkeleton.GlobalTransform * IKTargetSkeleton.GetBoneGlobalPose(pbID);
+            Transform3D targetPose = IKTargetSkeleton.GlobalTransform * _cachedModifiedPoses[pbID];
             Transform3D correctedTarget = targetPose * _boneCorrections[pbID];
 
             // Get current pose
@@ -118,39 +132,27 @@ public partial class BoneHandler : Node3D
             currentQuat = currentQuat.Normalized();
             targetQuat = targetQuat.Normalized();
             
-            // Calculate rotation error (shortest path from current to target)
-            Quaternion errorQuat = targetQuat * currentQuat.Inverse();
-            errorQuat = errorQuat.Normalized();
+            // === ANGULAR (Rotation) Control ===
+            Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
             
-            // Handle quaternion double-cover (ensure shortest rotation path)
-            if (errorQuat.W < 0)
-            {
-                errorQuat = new Quaternion(-errorQuat.X, -errorQuat.Y, -errorQuat.Z, -errorQuat.W);
-            }
+            // Convert to axis-angle (Euler can have gimbal lock issues, but tutorial uses it)
+            Vector3 angularDisplacement = rotationDifference.GetEuler();
             
-            // Convert quaternion error to axis-angle representation
-            // This gives us the angular displacement vector
-            Vector3 angularDisplacement = Vector3.Zero;
-            float angle = errorQuat.GetAngle();
-            
-            // Only calculate if angle is significant (avoid numerical issues at small angles)
-            if (angle > 0.001f)
-            {
-                Vector3 axis = errorQuat.GetAxis();
-                angularDisplacement = axis * angle;
-            }
+            // Normalize angles to [-PI, PI] range
+            angularDisplacement.X = NormalizeAngle(angularDisplacement.X);
+            angularDisplacement.Y = NormalizeAngle(angularDisplacement.Y);
+            angularDisplacement.Z = NormalizeAngle(angularDisplacement.Z);
             
             // Hooke's Law for rotation: T = kθ - cω
-            // k = spring stiffness, θ = angular displacement
-            // c = damping coefficient, ω = angular velocity
             Vector3 torque = (AngularStiffness * angularDisplacement) - (AngularDampening * pb.AngularVelocity);
-
+            
             // Clamp
             if (torque.Length() > MaxTorque)
             {
                 torque = torque.Normalized() * MaxTorque;
             }
-
+            
+            PhysicsServer3D.BodyApplyTorque(pb.GetRid(), torque);
         }
     }
 
