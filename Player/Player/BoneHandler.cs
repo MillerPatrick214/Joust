@@ -21,7 +21,7 @@ public partial class BoneHandler : Node3D
     [ExportGroup("Stability")]
     [Export] public float MaxPositionError = 1f; // Clamp extreme errors
     [Export] public float MaxAngularError = Mathf.Pi; // Clamp to 180 degrees
-    [Export(PropertyHint.None, "suffix:degrees")] public double MinimumAngleForForce = 2.0f;
+    //[Export(PropertyHint.None, "suffix:degrees")] public double MinimumAngleForForce = 2.0f;
 
     private CharacterBody3D _player;
     private PhysicalBoneSimulator3D _sim;
@@ -64,6 +64,7 @@ public partial class BoneHandler : Node3D
 
     public override void _PhysicsProcess(double delta)
     {
+        IKTargetSkeleton.Advance(delta);
 
     }
     
