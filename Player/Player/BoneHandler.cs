@@ -65,7 +65,7 @@ public partial class BoneHandler : Node3D
 
     public override void _PhysicsProcess(double delta)
     {
-        DriveBones();
+        DriveBones(delta);
         
 
     }
@@ -82,7 +82,7 @@ public partial class BoneHandler : Node3D
             _cachedModifiedPoses[boneId] = IKTargetSkeleton.GetBoneGlobalPose(boneId);
         }
     }
-    public void DriveBones()
+    public void DriveBones(double delta)
     {
         
         foreach (var pb in _bones)
@@ -121,7 +121,7 @@ public partial class BoneHandler : Node3D
                     force = force.Normalized() * MaxLinearForce;
                 }
 
-                PhysicsServer3D.BodyApplyCentralForce(pb.GetRid(), force);
+                pb.LinearVelocity += force * (float)delta;
             }
 
             // === ANGULAR (Rotation) Control ===
@@ -129,8 +129,8 @@ public partial class BoneHandler : Node3D
             Quaternion targetQuat = new Quaternion(correctedTarget.Basis.Orthonormalized());
             
             // Normalize quaternions
-            currentQuat = currentQuat.Normalized();
-            targetQuat = targetQuat.Normalized();
+            currentQuat = currentQuat;
+            targetQuat = targetQuat;
             
             // === ANGULAR (Rotation) Control ===
             Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
@@ -152,7 +152,7 @@ public partial class BoneHandler : Node3D
                 torque = torque.Normalized() * MaxTorque;
             }
             
-            PhysicsServer3D.BodyApplyTorque(pb.GetRid(), torque);
+            pb.AngularVelocity += torque * (float)delta;
         }
     }
 
