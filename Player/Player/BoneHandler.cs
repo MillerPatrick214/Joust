@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Godot;
+using Godot.Collections;
 
 public partial class BoneHandler : Node3D
 {
@@ -60,7 +60,12 @@ public partial class BoneHandler : Node3D
         }
 
         _sim.PhysicalBonesStartSimulation();
-        
+
+    }
+    
+    public Transform3D GetBoneCachedPose(int boneID)
+    {
+        return _cachedModifiedPoses[boneID];
     }
 
     public override void _PhysicsProcess(double delta)
