@@ -1,6 +1,4 @@
-[gd_scene load_steps=10 format=4 uid="uid://cp33481kthw71"]
-
-[ext_resource type="Script" uid="uid://cybivmps3yjis" path="res://Items/Weapons/DaneAxe/DaneAxe.cs" id="1_nxnnf"]
+[gd_scene load_steps=9 format=4 uid="uid://cp33481kthw71"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pyrm7"]
 vertex_color_use_as_albedo = true
@@ -79,10 +77,8 @@ radius = 0.03
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_nxnnf"]
 points = PackedVector3Array(0.03, 1.19, 0.03, -0.03, 1.19, 0.03, 0.03, 1.295, 0.03, -0.03, 1.295, 0.03, 0, 1.085, 0.235, 0, 1.365, 0.335)
 
-[node name="Dane_axe" type="RigidBody3D" node_paths=PackedStringArray("Hand_L")]
+[node name="Dane_axe" type="RigidBody3D"]
 transform = Transform3D(-1, 8.742278e-08, 3.821371e-15, 0, -4.371139e-08, 1, 8.742278e-08, 1, 4.371139e-08, 0, 0, 0)
-script = ExtResource("1_nxnnf")
-Hand_L = NodePath("Marker Hand_L")
 
 [node name="Node3D" type="Node3D" parent="."]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
@@ -104,7 +100,7 @@ shape = SubResource("CylinderShape3D_8m1as")
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
 shape = SubResource("ConvexPolygonShape3D_nxnnf")
 
-[node name="Marker Hand_L" type="Marker3D" parent="."]
+[node name="MarkerHand_L" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2929182, 0)
 
-[node name="Marker Hand_R" type="Marker3D" parent="."]
+[node name="MarkerHand_R" type="Marker3D" parent="."]

@@ -37,11 +37,12 @@ blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_u8d1b")
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_e4ynd"]
-radius = 0.04
+radius = 0.020996094
 height = 0.75
 
 [node name="Sword" type="RigidBody3D"]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mass = 0.001
 script = ExtResource("1_74bdg")
 
 [node name="Handle" type="Node3D" parent="."]
@@ -55,3 +56,5 @@ skeleton = NodePath("")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.358387, 0)
 shape = SubResource("CapsuleShape3D_e4ynd")
+
+[node name="MarkerHand_R" type="Marker3D" parent="."]

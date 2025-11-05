@@ -1,7 +1,4 @@
 using Godot;
-using System;
-using Godot.Collections;
-
 public partial class Player : CharacterBody3D
 {
     public bool CurrFootIsRight = true;
@@ -9,7 +6,7 @@ public partial class Player : CharacterBody3D
     public bool IsStepDown = false;
 
     [Export] public float FootLerpSpeed = 10;
-    
+
     [Export] public float MaxDistanceBeforeStep = 1.5f;
     [Export] public Skeleton3D IKSkeleton;
     [Export] public Marker3D LFootIKTarget;
@@ -23,6 +20,8 @@ public partial class Player : CharacterBody3D
 
     [Export] public StepHandler StepHandler;
     [Export] public BoneHandler BoneHandler;
+    [Export] public HeldItemHandler HeldItemHandler;
+
 
     [Export] public float Speed { get; set; } = 10f;
     [Export] public float FallAcceleration { get; set; } = 9.8f;
@@ -39,9 +38,6 @@ public partial class Player : CharacterBody3D
 
     public AnimationPlayer AnimPlayer;
     private BoneAttachment3D _rHandBoneAttachement;
-    private RigidBody3D _equipped;
-
-    
 
 
     public override void _Ready()
@@ -59,14 +55,14 @@ public partial class Player : CharacterBody3D
 
     public override void _Input(InputEvent @e)
     {
-        if (@e.IsActionPressed("pause")) GetTree().Quit(); 
+        if (@e.IsActionPressed("pause")) GetTree().Quit();
 
     }
 
     public override void _PhysicsProcess(double delta)
     {
-        HandleSteps();
-        FootMove(delta);
+        // HandleSteps();
+        // FootMove(delta);
 
         float yVelRotation = Mathf.Atan2(-Velocity.X, -Velocity.Z);
         if (Velocity != Vector3.Zero)
@@ -84,73 +80,73 @@ public partial class Player : CharacterBody3D
         ChestTarget.Position = ChestTarget.Position.Lerp(chestTargetNewPosition, 10 * (float)delta);
 
     }
-    
-    private void HandleSteps()
-    {
-        if (IsStepping) return;
-        
-        Vector3 rFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(rFootBoneId).Origin;
-        Vector3 lFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(lFootBoneId).Origin;
 
-        Vector3 avgPos = (rFootPos + lFootPos) / 2; 
-        
-        float rFootDistance = rFootPos.DistanceTo(RFootIKTarget.GlobalPosition);
-        float lFootDistance = lFootPos.DistanceTo(LFootIKTarget.GlobalPosition);
+    //     private void HandleSteps()
+    //     {
+    //         if (IsStepping) return;
 
-        float avgDistanceCenter = new Vector3(avgPos.X, (Velocity.Normalized().Length() * .2f), avgPos.Z).DistanceTo(new Vector3(GlobalPosition.X, (Velocity.Normalized().Length() * .2f), GlobalPosition.Z));
+    //         Vector3 rFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(rFootBoneId).Origin;
+    //         Vector3 lFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(lFootBoneId).Origin;
 
-         if (IsStepping)
-         {
-            // if (rFootDistance > MaxDistanceBeforeStep || lFootDistance > MaxDistanceBeforeStep)
-            // {
-            //     Velocity = Vector3.Zero;
-            // }
-            return;
-         }
+    //         Vector3 avgPos = (rFootPos + lFootPos) / 2;
 
-        if (avgDistanceCenter > MaxDistanceBeforeStep /*|| Velocity == Vector3.Zero && (rFootDistance > 0.1f || lFootDistance > 0.1f)*/)
-        {
-            IsStepping = true;
-            CurrFootIsRight = lFootDistance > rFootDistance ? false : true;
-            StepDownTarget = CurrFootIsRight ? StepHandler.StepDownTargetR : StepHandler.StepDownTargetL;
-        }
+    //         float rFootDistance = rFootPos.DistanceTo(RFootIKTarget.GlobalPosition);
+    //         float lFootDistance = lFootPos.DistanceTo(LFootIKTarget.GlobalPosition);
 
-        if (Velocity == Vector3.Zero && rFootDistance > MaxDistanceBeforeStep * .2 || lFootDistance > MaxDistanceBeforeStep * .2) //when we have a velocity of 0, we are more strict about maxstepdistance to acheive a more natural looking pose
-        {
-            IsStepping = true;
-            CurrFootIsRight = lFootDistance > rFootDistance ? false : true;
-            StepDownTarget = CurrFootIsRight ? StepHandler.StepDownTargetR : StepHandler.StepDownTargetL;
-            
-        }
-        
-        /* if (rFootDistance > MaxDistanceBeforeStep || lFootDistance > MaxDistanceBeforeStep)
-        {
-            IsStepping = true;
-            CurrFootIsRight = lFootDistance > rFootDistance ? false : true;
-            StepDownTarget = CurrFootIsRight ? StepHandler.StepDownTargetR : StepHandler.StepDownTargetL;
-        } */ 
-    }
-    
-    private void FootMove(double delta)
-    {
-        if (!IsStepping) return;
-        
-        Vector3 StepUpPos = CurrFootIsRight ? StepHandler.StepUpPosR.GlobalPosition : StepHandler.StepUpPosL.GlobalPosition;
-        Marker3D CurrFootIKTarget = CurrFootIsRight ? RFootIKTarget : LFootIKTarget;
-        
-        if (!IsStepDown)
-        {
-            CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(StepUpPos, FootLerpSpeed * (float)delta);
-            if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(StepUpPos) < 0.01f) IsStepDown = true;
-        }
-        else
-        {
-            CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(StepDownTarget, FootLerpSpeed * (float)delta);
-            if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(StepDownTarget) < 0.01f)
-            {
-                IsStepDown = false;
-                IsStepping = false;
-            }
-        }
-    }
+    //         float avgDistanceCenter = new Vector3(avgPos.X, (Velocity.Normalized().Length() * .2f), avgPos.Z).DistanceTo(new Vector3(GlobalPosition.X, (Velocity.Normalized().Length() * .2f), GlobalPosition.Z));
+
+    //         if (IsStepping)
+    //         {
+    //             // if (rFootDistance > MaxDistanceBeforeStep || lFootDistance > MaxDistanceBeforeStep)
+    //             // {
+    //             //     Velocity = Vector3.Zero;
+    //             // }
+    //             return;
+    //         }
+
+    //         if (avgDistanceCenter > MaxDistanceBeforeStep /*|| Velocity == Vector3.Zero && (rFootDistance > 0.1f || lFootDistance > 0.1f)*/)
+    //         {
+    //             IsStepping = true;
+    //             CurrFootIsRight = lFootDistance > rFootDistance ? false : true;
+    //             StepDownTarget = CurrFootIsRight ? StepHandler.StepDownTargetR : StepHandler.StepDownTargetL;
+    //         }
+
+    //         if (Velocity == Vector3.Zero && rFootDistance > MaxDistanceBeforeStep * .2 || lFootDistance > MaxDistanceBeforeStep * .2) //when we have a velocity of 0, we are more strict about maxstepdistance to acheive a more natural looking pose
+    //         {
+    //             IsStepping = true;
+    //             CurrFootIsRight = lFootDistance > rFootDistance ? false : true;
+    //             StepDownTarget = CurrFootIsRight ? StepHandler.StepDownTargetR : StepHandler.StepDownTargetL;
+
+    //         }
+
+    //         /* if (rFootDistance > MaxDistanceBeforeStep || lFootDistance > MaxDistanceBeforeStep)
+    //         {
+    //             IsStepping = true;
+    //             CurrFootIsRight = lFootDistance > rFootDistance ? false : true;
+    //             StepDownTarget = CurrFootIsRight ? StepHandler.StepDownTargetR : StepHandler.StepDownTargetL;
+    //         } */
+    //     }
+
+    //     private void FootMove(double delta)
+    //     {
+    //         if (!IsStepping) return;
+
+    //         Vector3 StepUpPos = CurrFootIsRight ? StepHandler.StepUpPosR.GlobalPosition : StepHandler.StepUpPosL.GlobalPosition;
+    //         Marker3D CurrFootIKTarget = CurrFootIsRight ? RFootIKTarget : LFootIKTarget;
+
+    //         if (!IsStepDown)
+    //         {
+    //             CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(StepUpPos, FootLerpSpeed * (float)delta);
+    //             if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(StepUpPos) < 0.01f) IsStepDown = true;
+    //         }
+    //         else
+    //         {
+    //             CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(StepDownTarget, FootLerpSpeed * (float)delta);
+    //             if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(StepDownTarget) < 0.01f)
+    //             {
+    //                 IsStepDown = false;
+    //                 IsStepping = false;
+    //             }
+    //         }
+    //     }
 }

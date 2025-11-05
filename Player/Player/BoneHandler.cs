@@ -1,5 +1,4 @@
 using Godot;
-using Godot.Collections;
 
 public partial class BoneHandler : Node3D
 {
@@ -35,7 +34,7 @@ public partial class BoneHandler : Node3D
     {
         PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
         IKTargetSkeleton.SkeletonUpdated += OnSkeletonUpdated;
-        _player = GetParent<CharacterBody3D>();
+        _player = GetParentOrNull<CharacterBody3D>();
 
         foreach (var c in PhysicsSkeleton.GetChildren())
         {
@@ -62,7 +61,7 @@ public partial class BoneHandler : Node3D
         _sim.PhysicalBonesStartSimulation();
 
     }
-    
+
     public Transform3D GetBoneCachedPose(int boneID)
     {
         return _cachedModifiedPoses[boneID];
@@ -71,10 +70,10 @@ public partial class BoneHandler : Node3D
     public override void _PhysicsProcess(double delta)
     {
         DriveBones(delta);
-        
+
 
     }
-    
+
     private void OnSkeletonUpdated()
     {
         // Capture all modified bone poses while they're still applied
@@ -89,7 +88,7 @@ public partial class BoneHandler : Node3D
     }
     public void DriveBones(double delta)
     {
-        
+
         foreach (var pb in _bones)
         {
             int pbID = pb.GetBoneId();
@@ -132,31 +131,31 @@ public partial class BoneHandler : Node3D
             // === ANGULAR (Rotation) Control ===
             Quaternion currentQuat = new Quaternion(currentPose.Basis.Orthonormalized());
             Quaternion targetQuat = new Quaternion(correctedTarget.Basis.Orthonormalized());
-            
+
             // Normalize quaternions
             currentQuat = currentQuat;
             targetQuat = targetQuat;
-            
+
             // === ANGULAR (Rotation) Control ===
             Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
-            
+
             // Convert to axis-angle (Euler can have gimbal lock issues, but tutorial uses it)
             Vector3 angularDisplacement = rotationDifference.GetEuler();
-            
+
             // Normalize angles to [-PI, PI] range
             angularDisplacement.X = NormalizeAngle(angularDisplacement.X);
             angularDisplacement.Y = NormalizeAngle(angularDisplacement.Y);
             angularDisplacement.Z = NormalizeAngle(angularDisplacement.Z);
-            
+
             // Hooke's Law for rotation: T = kθ - cω
             Vector3 torque = (AngularStiffness * angularDisplacement) - (AngularDampening * pb.AngularVelocity);
-            
+
             // Clamp
             if (torque.Length() > MaxTorque)
             {
                 torque = torque.Normalized() * MaxTorque;
             }
-            
+
             pb.AngularVelocity += torque * (float)delta;
         }
     }
