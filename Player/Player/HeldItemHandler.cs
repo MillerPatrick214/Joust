@@ -21,7 +21,7 @@ public partial class HeldItemHandler : Node3D
     public override void _Ready()
     {
         _worldScene = GetTree().CurrentScene;
-        // if (DefaultWeaponScene != null) CallDeferred(nameof(_EquipDefault));
+        if (DefaultWeaponScene != null) CallDeferred(nameof(_EquipDefault));
     }
 
     private void _EquipDefault() => Equip(DefaultWeaponScene);
@@ -59,9 +59,10 @@ public partial class HeldItemHandler : Node3D
             return;
         }
 
+
         // Calculate weapon position so that right hand grip marker ends up at hand position
-        Transform3D gripLocalToWeapon = _held.GlobalTransform.AffineInverse() * _rHandGrip.GlobalTransform;
-        _held.GlobalTransform = RightHandBone.GlobalTransform * gripLocalToWeapon.AffineInverse();
+        Transform3D gripLocal = _rHandGrip.Transform;
+        _held.GlobalTransform = RightHandBone.GlobalTransform * gripLocal.AffineInverse();
 
         // set the item's velocities to match the hand before creating joint
         _held.LinearVelocity = RightHandBone.LinearVelocity;

@@ -41,7 +41,7 @@ radius = 0.020996094
 height = 0.75
 
 [node name="Sword" type="RigidBody3D"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 mass = 0.001
 script = ExtResource("1_74bdg")
 
@@ -58,3 +58,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.358387, 0)
 shape = SubResource("CapsuleShape3D_e4ynd")
 
 [node name="MarkerHand_R" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -1, 8.742278e-08, 0, -8.742278e-08, -1, 0.025, 0.066, -0.01)
+rotation_order = 0

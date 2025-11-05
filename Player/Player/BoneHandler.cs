@@ -1,5 +1,5 @@
- using Godot;
-using Godot.Collections;
+using Godot;
+
 
 public partial class BoneHandler : Node3D
 {
@@ -68,6 +68,7 @@ public partial class BoneHandler : Node3D
     public Transform3D GetBoneCachedPose(int boneID)
     {
         return _cachedModifiedPoses[boneID];
+
     }
 
     public override void _PhysicsProcess(double delta)
@@ -136,7 +137,7 @@ public partial class BoneHandler : Node3D
             // Normalize quaternions
             currentQuat = currentQuat.Normalized();
             targetQuat = targetQuat.Normalized();
-            
+
             // === ANGULAR (Rotation) Control ===
             Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
 

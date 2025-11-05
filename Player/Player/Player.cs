@@ -11,6 +11,7 @@ public partial class Player : CharacterBody3D
     [Export] public Marker3D ChestTarget;
     [Export] public StepHandler StepHandler;
     [Export] public BoneHandler BoneHandler;
+    [Export] public HeldItemHandler HeldItemHandler;
 
 
     [ExportGroup("Procedural Walking Parameters")]
@@ -19,11 +20,8 @@ public partial class Player : CharacterBody3D
     [Export] public float MaxBodyTilt = .25f; //Represents how far the HeadTarget can move to in meters
     [Export(PropertyHint.Range, "1.0f, 5.0f")] public float VelocityImpactOnStrideFactor;
 
-    [Export(PropertyHint.Range, "0.0f,1.0f,")] public float StepUpHeight; //Between 0.0 & 1.0m 
+    [Export(PropertyHint.Range, "0.0f,1.0f,")] public float StepUpHeight; //Between 0.0 & 1.0m
     [Export(PropertyHint.Range, "1.0f, 20.0f,")] public float StepUpSpeed;
-    [Export] public StepHandler StepHandler;
-    [Export] public BoneHandler BoneHandler;
-    [Export] public HeldItemHandler HeldItemHandler;
 
     public Vector3 _stepDownTarget;
     private Vector3 _footStartPos;
@@ -39,8 +37,8 @@ public partial class Player : CharacterBody3D
     int lFootBoneId;
 
     private float _stepProgress;
-    private bool _isStepUp; 
-    
+    private bool _isStepUp;
+
     [Export] public RigidBody3D HeldItem;
 
     private Vector3 _targetVelocity = Vector3.Zero;
@@ -64,7 +62,7 @@ public partial class Player : CharacterBody3D
     }
 
     public override void _PhysicsProcess(double delta)
-    { 
+    {
 
         _rFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(rFootBoneId).Origin;
         _lFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(lFootBoneId).Origin;
@@ -85,8 +83,8 @@ public partial class Player : CharacterBody3D
         HandleSteps(delta);
         FootMove(delta);
 
-        Vector3 avgLocalFtPos = (BoneHandler.GetBoneCachedPose(rFootBoneId).Origin + BoneHandler.GetBoneCachedPose(lFootBoneId).Origin) / 2; // taking avg local foot pos to shift head in that direction along w/ velocity. 
-        Vector3 chestTargetNewPosition = new Vector3( (avgLocalFtPos.X + -Velocity.Normalized().X) * MaxBodyTilt, ChestTarget.Position.Y, (avgLocalFtPos.Z + -Velocity.Normalized().Z) * MaxBodyTilt); //Shifts the chest target in accordance w/ velocity. 0 vel is default position
+        Vector3 avgLocalFtPos = (BoneHandler.GetBoneCachedPose(rFootBoneId).Origin + BoneHandler.GetBoneCachedPose(lFootBoneId).Origin) / 2; // taking avg local foot pos to shift head in that direction along w/ velocity.
+        Vector3 chestTargetNewPosition = new Vector3((avgLocalFtPos.X + -Velocity.Normalized().X) * MaxBodyTilt, ChestTarget.Position.Y, (avgLocalFtPos.Z + -Velocity.Normalized().Z) * MaxBodyTilt); //Shifts the chest target in accordance w/ velocity. 0 vel is default position
         ChestTarget.Position = ChestTarget.Position.Lerp(chestTargetNewPosition, 10 * (float)delta);
 
     }
@@ -96,7 +94,7 @@ public partial class Player : CharacterBody3D
         if (IsStepping) return;
         GD.Print("HandleSteps Entered");
 
-        Vector3 desiredR = StepHandler.StepDownTargetR + (Velocity * VelocityImpactOnStrideFactor *(float)delta);
+        Vector3 desiredR = StepHandler.StepDownTargetR + (Velocity * VelocityImpactOnStrideFactor * (float)delta);
         Vector3 desiredL = StepHandler.StepDownTargetL + (Velocity * VelocityImpactOnStrideFactor * (float)delta);
 
         float rErr = _rFootPos.DistanceTo(desiredR);
@@ -109,10 +107,10 @@ public partial class Player : CharacterBody3D
             CurrFootIsRight = (rErr >= lErr); // move the foot with the larger error
 
             _stepDownTarget = CurrFootIsRight ? desiredR
-                                                : desiredL;         
+                                                : desiredL;
             _footStartPos = CurrFootIsRight ? RFootIKTarget.GlobalPosition
                                                 : LFootIKTarget.GlobalPosition;
-                                                
+
             _stepProgress = 0;
             _isStepUp = true;
         }
@@ -126,26 +124,26 @@ public partial class Player : CharacterBody3D
         Marker3D CurrFootIKTarget = CurrFootIsRight ? RFootIKTarget : LFootIKTarget;
 
         _stepProgress = Mathf.Clamp(_stepProgress + StepUpSpeed * (float)delta, 0, 100);
-    
+
         float footHeightOffset = StepUpHeight * (1 - _stepProgress);       //Using cosine as, since we are lerping to the height offset, we shoot up from 0 to the .5 max (or a bit after tbh) immediately and then head down. The foot doesn't draw the same arc as the Cosine here.
 
-        CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(_stepDownTarget + new Vector3(0, footHeightOffset, 0), (FootLerpSpeed + Velocity.Length())* (float)delta);            
-            if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(_stepDownTarget) < 0.01f)
-            {
-                IsStepping = false;
-                _stepProgress = 0f;
-                CurrFootIKTarget.GlobalPosition = _stepDownTarget;
-            }
+        CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(_stepDownTarget + new Vector3(0, footHeightOffset, 0), (FootLerpSpeed + Velocity.Length()) * (float)delta);
+        if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(_stepDownTarget) < 0.01f)
+        {
+            IsStepping = false;
+            _stepProgress = 0f;
+            CurrFootIKTarget.GlobalPosition = _stepDownTarget;
+        }
     }
 }
 
 
 /*
-Might be able to break the necessesity for tuning player speed, lerp speed etc? It might be easier to 
+Might be able to break the necessesity for tuning player speed, lerp speed etc? It might be easier to
 
 Implement delta*vel ofset?
 hip rot?
-different step distance for directions 
+different step distance for directions
 accel/deccel
 Velocity only during step other just move hips? Torso? (Maybe)
 Ray cast from hips down?
