@@ -1,4 +1,5 @@
-using Godot;
+ using Godot;
+using Godot.Collections;
 
 public partial class BoneHandler : Node3D
 {
@@ -36,6 +37,8 @@ public partial class BoneHandler : Node3D
         IKTargetSkeleton.SkeletonUpdated += OnSkeletonUpdated;
         _player = GetParentOrNull<CharacterBody3D>();
 
+        OnSkeletonUpdated(); // Run once to init bone cache
+
         foreach (var c in PhysicsSkeleton.GetChildren())
         {
             if (c is PhysicalBoneSimulator3D pbs) _sim = pbs;
@@ -70,8 +73,6 @@ public partial class BoneHandler : Node3D
     public override void _PhysicsProcess(double delta)
     {
         DriveBones(delta);
-
-
     }
 
     private void OnSkeletonUpdated()
@@ -133,9 +134,9 @@ public partial class BoneHandler : Node3D
             Quaternion targetQuat = new Quaternion(correctedTarget.Basis.Orthonormalized());
 
             // Normalize quaternions
-            currentQuat = currentQuat;
-            targetQuat = targetQuat;
-
+            currentQuat = currentQuat.Normalized();
+            targetQuat = targetQuat.Normalized();
+            
             // === ANGULAR (Rotation) Control ===
             Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
 

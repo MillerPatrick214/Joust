@@ -6,8 +6,6 @@ public partial class StepHandler : Node3D
     public RayCast3D RightRay;
     public RayCast3D LeftRay;
 
-    [Export] public Marker3D StepUpPosR;
-    [Export] public Marker3D StepUpPosL;
 
     public Vector3 StepDownTargetR = Vector3.Zero;
     public Vector3 StepDownTargetL = Vector3.Zero;
