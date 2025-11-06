@@ -7,6 +7,7 @@ public partial class Player : CharacterBody3D
     public bool CurrFootIsRight = true;
     public bool IsStepping = false;
 
+
     [ExportGroup("Required Child Node References")]
     [Export] public Skeleton3D IKSkeleton;
     [Export] public Marker3D LFootIKTarget;
@@ -50,23 +51,47 @@ public partial class Player : CharacterBody3D
     private BoneAttachment3D _rHandBoneAttachement;
     private RigidBody3D _equipped;
 
+    [ExportGroup("Camera Settings")]
+    [Export(PropertyHint.None, "suffix:\u00ba")] float YRotationMinimum = -70;
+    [Export(PropertyHint.None, "suffix:\u00ba")] float YRotationMaximum = 70;
+    [Export] float lookAroundSpeed = 10f;
+    [Export]Camera3D Camera;
+	float yawDeg;
+	float pitchDeg;
+
     public override void _Ready()
     {
+        Input.MouseMode = Input.MouseModeEnum.Captured;
         Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
         //Input.MouseMode = Input.MouseModeEnum.Confined;
         AnimPlayer = GetNodeOrNull<AnimationPlayer>("AnimationPlayer");
         rFootBoneId = IKSkeleton.FindBone("Foot.R");
         lFootBoneId = IKSkeleton.FindBone("Foot.L");
+        yawDeg = -RotationDegrees.Y; //See note in _Input about how Mouse/player rotation axis (x & y) are flipped
     }
 
     public override void _Input(InputEvent @e)
     {
         if (@e.IsActionPressed("pause")) GetTree().Quit();
+
+		if (@e is InputEventMouseMotion mouseMotion)
+		{ //mouseMotion is a local variable here
+			yawDeg += mouseMotion.Relative.X * (lookAroundSpeed / 100);   
+            pitchDeg -= mouseMotion.Relative.Y * (lookAroundSpeed / 100);
+            GD.Print(pitchDeg);
+
+			pitchDeg = Mathf.Clamp(pitchDeg, YRotationMinimum, YRotationMaximum);
+
+			Vector3 char_rot = new Godot.Vector3(RotationDegrees.X, -yawDeg, RotationDegrees.Z);
+			Vector3 cam_rot = new Godot.Vector3(pitchDeg, Camera.RotationDegrees.Y, Camera.RotationDegrees.Z);
+
+            RotationDegrees = char_rot;
+			Camera.RotationDegrees = cam_rot;
+		}
     }
 
     public override void _PhysicsProcess(double delta)
-    { 
-
+    {
         _rFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(rFootBoneId).Origin;
         _lFootPos = IKSkeleton.GlobalTransform * BoneHandler.GetBoneCachedPose(lFootBoneId).Origin;
 
@@ -74,8 +99,8 @@ public partial class Player : CharacterBody3D
 
         if (Velocity != Vector3.Zero)
         {
-            StepHandler.LeftRay.Rotation = new Vector3(Mathf.DegToRad(35), yVelRotation, 0);
-            StepHandler.RightRay.Rotation = new Vector3(Mathf.DegToRad(35), yVelRotation, 0);
+            StepHandler.LeftRay.GlobalRotation = new Vector3(Mathf.DegToRad(35), yVelRotation, 0);
+            StepHandler.RightRay.GlobalRotation = new Vector3(Mathf.DegToRad(35), yVelRotation, 0);
         }
         else
         {
@@ -86,16 +111,18 @@ public partial class Player : CharacterBody3D
         HandleSteps(delta);
         FootMove(delta);
 
-        Vector3 avgLocalFtPos = (BoneHandler.GetBoneCachedPose(rFootBoneId).Origin + BoneHandler.GetBoneCachedPose(lFootBoneId).Origin) / 2; // taking avg local foot pos to shift head in that direction along w/ velocity. 
-        Vector3 chestTargetNewPosition = new Vector3( (avgLocalFtPos.X + -Velocity.Normalized().X) * MaxBodyTilt, ChestTarget.Position.Y, (avgLocalFtPos.Z + -Velocity.Normalized().Z) * MaxBodyTilt); //Shifts the chest target in accordance w/ velocity. 0 vel is default position
+        Vector3 avgLocalFtPos = (BoneHandler.GetBoneCachedPose(rFootBoneId).Origin + BoneHandler.GetBoneCachedPose(lFootBoneId).Origin) / 2; // taking avg local foot pos to shift head in that direction along w/ velocity.
+        Vector3 LocalVelocity = GlobalTransform.Basis.Inverse() * Velocity;  
+        Vector3 chestTargetNewPosition = new Vector3((avgLocalFtPos.X + LocalVelocity.Normalized().X) * MaxBodyTilt, ChestTarget.Position.Y, (avgLocalFtPos.Z + LocalVelocity.Normalized().Z) * MaxBodyTilt); //Shifts the chest target in accordance w/ velocity. 0 vel is default position
         ChestTarget.Position = ChestTarget.Position.Lerp(chestTargetNewPosition, 10 * (float)delta);
 
     }
+    
 
     private void HandleSteps(double delta)
     {
         if (IsStepping) return;
-        GD.Print("HandleSteps Entered");
+        //GD.Print("HandleSteps Entered");
 
         Vector3 desiredR = StepHandler.StepDownTargetR + (Velocity * VelocityImpactOnStrideFactor *(float)delta);
         Vector3 desiredL = StepHandler.StepDownTargetL + (Velocity * VelocityImpactOnStrideFactor * (float)delta);
@@ -110,8 +137,9 @@ public partial class Player : CharacterBody3D
             CurrFootIsRight = (rErr >= lErr); // move the foot with the larger error
 
             _stepDownTarget = CurrFootIsRight ? desiredR
-                                                : desiredL;         
-            _footStartPos = CurrFootIsRight ? RFootIKTarget.GlobalPosition
+                                                : desiredL;
+                                                        
+            _footStartPos = CurrFootIsRight ?     RFootIKTarget.GlobalPosition
                                                 : LFootIKTarget.GlobalPosition;
                                                 
             _stepProgress = 0;
@@ -122,7 +150,7 @@ public partial class Player : CharacterBody3D
     private void FootMove(double delta) //PROBLEM HERE IS THAT RAISING FOOT OBVIOUSLY INCREASES DISTANCE & THEREFORE CHANGES HEIGHT WHICH THEREFORE INCREASES DISTANCE AND THEREFORE... ETC ETC
     {
         if (!IsStepping) return;
-        GD.Print("FootMove Entered");
+        //GD.Print("FootMove Entered");
 
         Marker3D CurrFootIKTarget = CurrFootIsRight ? RFootIKTarget : LFootIKTarget;
 
@@ -130,28 +158,30 @@ public partial class Player : CharacterBody3D
     
         float footHeightOffset = StepUpHeight * (1 - _stepProgress);       //Using cosine as, since we are lerping to the height offset, we shoot up from 0 to the .5 max (or a bit after tbh) immediately and then head down. The foot doesn't draw the same arc as the Cosine here.
 
-        CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(_stepDownTarget + new Vector3(0, footHeightOffset, 0), (FootLerpSpeed + Velocity.Length())* (float)delta);            
-            if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(_stepDownTarget) < 0.01f)
-            {
-                IsStepping = false;
-                _stepProgress = 0f;
-                CurrFootIKTarget.GlobalPosition = _stepDownTarget;
-            }
+        CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(_stepDownTarget + new Vector3(0, footHeightOffset, 0), (FootLerpSpeed + Velocity.Length()) * (float)delta);
+        CurrFootIKTarget.Rotation = new Vector3(CurrFootIKTarget.Rotation.X, Rotation.Y, CurrFootIKTarget.Rotation.Z); //Prevents ankles from rolling
+
+        if (CurrFootIKTarget.GlobalPosition.DistanceSquaredTo(_stepDownTarget) < 0.01f)
+        {
+            IsStepping = false;
+            _stepProgress = 0f;
+            CurrFootIKTarget.GlobalPosition = _stepDownTarget;
+        }
     }
 }
 
 
 /*
-Might be able to break the necessesity for tuning player speed, lerp speed etc? It might be easier to 
+    Might be able to break the necessesity for tuning player speed, lerp speed etc? It might be easier to 
 
-Implement delta*vel ofset?
-hip rot?
-different step distance for directions 
-accel/deccel
-Velocity only during step other just move hips? Torso? (Maybe)
-Ray cast from hips down?
-Sine wave interp for foot up/down movement?
+    Implement delta*vel ofset?
+    hip rot?
+    different step distance for directions 
+    accel/deccel
+    Velocity only during step other just move hips? Torso? (Maybe)
+    Ray cast from hips down?
+    Sine wave interp for foot up/down movement?
 
 
-I feel like max distance from IK target is an erroneous way to time steps. Ideally, we would want IK target & foot to be synced 24/7 as this means we haven't exceeded the limits of our IK skeleton. need to think about this more.
+    I feel like max distance from IK target is an erroneous way to time steps. Ideally, we would want IK target & foot to be synced 24/7 as this means we haven't exceeded the limits of our IK skeleton. need to think about this more.
 */
