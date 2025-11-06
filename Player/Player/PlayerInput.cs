@@ -15,8 +15,9 @@ public partial class PlayerInput : MultiplayerSynchronizer
 
     public override void _Process(double delta)
     {
-        inputDir = Input.GetVector("Forward", "Back", "Left", "Right");
-        if (Input.IsActionJustPressed("Jump"))
+        inputDir = Input.GetVector("move_right", "move_left", "move_back", "move_forward");
+
+        if (Input.IsActionJustPressed("jump"))
         {
             Rpc(nameof(Jump));
         }

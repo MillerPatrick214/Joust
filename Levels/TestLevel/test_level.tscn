@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://mmnl8lnjrasv"]
+
+[ext_resource type="ArrayMesh" uid="uid://mvo2cleqpker" path="res://Levels/TestLevel/Assets/Mud/Mud.res" id="1_brg3y"]
+[ext_resource type="PackedScene" uid="uid://dlvxg8weah262" path="res://Items/Weapons/Sword/sword.tscn" id="3_0cvxl"]
+[ext_resource type="PackedScene" uid="uid://c4f4fvlpdtr80" path="res://Player/Player/Player.tscn" id="3_up0yw"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hsoxx"]
+size = Vector3(150, 2, 150)
+
+[node name="TestLevel" type="Node3D"]
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+collision_layer = 7
+collision_mask = 7
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_hsoxx")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 100, 0, 0, 0)
+mesh = ExtResource("1_brg3y")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.503793, 3.49627, 0.284348)
+
+[node name="Sword" parent="." instance=ExtResource("3_0cvxl")]
+transform = Transform3D(1, 0, 0, 0, -0.1314952, -0.99131674, 0, 0.99131674, -0.1314952, 0.35253328, 1.1854935, -1.165175)
+
+[node name="Player" parent="." instance=ExtResource("3_up0yw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2834973, 0)
