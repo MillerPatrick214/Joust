@@ -1,12 +1,11 @@
+// Player.cs
 using Godot;
 using System;
-using Godot.Collections;
 
 public partial class Player : CharacterBody3D
 {
     public bool CurrFootIsRight = true;
     public bool IsStepping = false;
-
 
     [ExportGroup("Required Child Node References")]
     [Export] public Skeleton3D IKSkeleton;
@@ -57,7 +56,30 @@ public partial class Player : CharacterBody3D
     [Export] float lookAroundSpeed = 10f;
     [Export]Camera3D Camera;
 	float yawDeg;
-	float pitchDeg;
+    float pitchDeg;
+
+    [Export]    //Multiplayer ==================================
+	public int PlayerID
+	{
+		get => _playerId;
+		set
+		{
+			_playerId = value;
+			if (GetNodeOrNull<PlayerInput>("PlayerInput") is Node PlayerInputNode)
+			{
+				PlayerInputNode.SetMultiplayerAuthority(value);
+	
+			}
+
+			else
+			{
+				GD.PrintErr("PlayerInput node not found!");
+			}
+		}
+	}
+	private int _playerId = 1;
+    private PlayerInput _playerInput;
+
 
     public override void _Ready()
     {
@@ -68,7 +90,21 @@ public partial class Player : CharacterBody3D
         rFootBoneId = IKSkeleton.FindBone("Foot.R");
         lFootBoneId = IKSkeleton.FindBone("Foot.L");
         yawDeg = -RotationDegrees.Y; //See note in _Input about how Mouse/player rotation axis (x & y) are flipped
+
+		_playerInput = GetNodeOrNull<PlayerInput>("PlayerInput");
+
+        GD.Print($"Player._Ready() - PlayerID: {PlayerID}, MyUniqueID: {Multiplayer.GetUniqueId()}, Match: {PlayerID == Multiplayer.GetUniqueId()}");
+        SetupCamera();
     }
+
+    private void SetupCamera()
+	{
+		if (PlayerID == Multiplayer.GetUniqueId())
+		{
+			Camera.Current = true;
+			GD.Print($"Camera activated for player {PlayerID}");
+		}
+	}
 
     public override void _Input(InputEvent @e)
     {

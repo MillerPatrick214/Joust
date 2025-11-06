@@ -1,0 +1,42 @@
+[gd_scene load_steps=5 format=3 uid="uid://mmnl8lnjrasv"]
+
+[ext_resource type="Script" uid="uid://c3h5vfdruulky" path="res://Levels/Level/World.cs" id="1_vvqin"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hsoxx"]
+albedo_color = Color(1.54921e-07, 0.124031, 0.0327, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gojnm"]
+material = SubResource("StandardMaterial3D_hsoxx")
+size = Vector3(50, 0.5, 50)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_vvqin"]
+data = PackedVector3Array(-25, 0.25, 25, 25, 0.25, 25, -25, -0.25, 25, 25, 0.25, 25, 25, -0.25, 25, -25, -0.25, 25, 25, 0.25, -25, -25, 0.25, -25, 25, -0.25, -25, -25, 0.25, -25, -25, -0.25, -25, 25, -0.25, -25, 25, 0.25, 25, 25, 0.25, -25, 25, -0.25, 25, 25, 0.25, -25, 25, -0.25, -25, 25, -0.25, 25, -25, 0.25, -25, -25, 0.25, 25, -25, -0.25, -25, -25, 0.25, 25, -25, -0.25, 25, -25, -0.25, -25, 25, 0.25, 25, -25, 0.25, 25, 25, 0.25, -25, -25, 0.25, 25, -25, 0.25, -25, 25, 0.25, -25, -25, -0.25, 25, 25, -0.25, 25, -25, -0.25, -25, 25, -0.25, 25, 25, -0.25, -25, -25, -0.25, -25)
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_vvqin")
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="Map" type="Node3D" parent="."]
+
+[node name="Terrain" type="Node3D" parent="Map"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/Terrain"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.086266, 0.104675, -0.166961)
+mesh = SubResource("BoxMesh_gojnm")
+skeleton = NodePath("")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Map/Terrain/MeshInstance3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/Terrain/MeshInstance3D/StaticBody3D"]
+shape = SubResource("ConcavePolygonShape3D_vvqin")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Map"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.503793, 3.49627, 0.284348)
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("uid://b7qn6mmf4getv")
+spawn_path = NodePath("../Players")
+
+[node name="SpawnLocation" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7645617, 0)

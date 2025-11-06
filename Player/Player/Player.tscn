@@ -2797,6 +2797,49 @@ script = ExtResource("7_1bfp3")
 [node name="IkHandler" type="Node" parent="."]
 
 [node name="EquippedHandler" type="Node" parent="."]
+[gd_scene load_steps=8 format=3 uid="uid://b7qn6mmf4getv"]
+
+[ext_resource type="Script" uid="uid://dm8mey4e8l4a8" path="res://Player/Player/Player.cs" id="1_3qydi"]
+[ext_resource type="PackedScene" uid="uid://dlvxg8weah262" path="res://Items/Weapons/Sword/sword.tscn" id="2_2ryxj"]
+[ext_resource type="Script" uid="uid://buotdjg5h47pc" path="res://Player/Player/PlayerInput.cs" id="3_ltu3i"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ltu3i"]
+radius = 0.1
+height = 1.8
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0rwas"]
+radius = 0.1
+height = 1.8
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_ltu3i"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:PlayerID")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:velocity")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:rotation")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_2ryxj"]
+properties/0/path = NodePath(".:inputDir")
+properties/0/spawn = false
+properties/0/replication_mode = 1
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_3qydi")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_ltu3i")
+skeleton = NodePath("../Camera3D")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.16655059, 0)
@@ -2805,3 +2848,20 @@ shape = SubResource("SphereShape3D_1bfp3")
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(-1, -3.6946464e-08, 7.923194e-08, 0, 0.90630776, 0.42261827, -8.742278e-08, 0.42261827, -0.90630776, 0, 2, -1.8)
 fov = 120.0
+[node name="LHandProxy" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.1, -0.2)
+
+[node name="RightHandJoint" type="Generic6DOFJoint3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.1, -0.2)
+node_a = NodePath("..")
+node_b = NodePath("Sword")
+
+[node name="Sword" parent="RightHandJoint" instance=ExtResource("2_2ryxj")]
+
+[node name="ServerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_ltu3i")
+
+[node name="PlayerInput" type="MultiplayerSynchronizer" parent="."]
+root_path = NodePath(".")
+replication_config = SubResource("SceneReplicationConfig_2ryxj")
+script = ExtResource("3_ltu3i")
