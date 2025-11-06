@@ -14,6 +14,7 @@ public partial class Player : CharacterBody3D
     [Export] public Marker3D ChestTarget;
     [Export] public StepHandler StepHandler;
     [Export] public BoneHandler BoneHandler;
+    [Export] public PlayerInput PlayerInput;
 
 
     [ExportGroup("Procedural Walking Parameters")]
@@ -58,7 +59,9 @@ public partial class Player : CharacterBody3D
 	float yawDeg;
     float pitchDeg;
 
-    [Export]    //Multiplayer ==================================
+
+    //Multiplayer -----------------------
+    [Export]   
 	public int PlayerID
 	{
 		get => _playerId;
@@ -78,7 +81,7 @@ public partial class Player : CharacterBody3D
 		}
 	}
 	private int _playerId = 1;
-    private PlayerInput _playerInput;
+    // -----------------------------------------------------
 
 
     public override void _Ready()
@@ -91,7 +94,6 @@ public partial class Player : CharacterBody3D
         lFootBoneId = IKSkeleton.FindBone("Foot.L");
         yawDeg = -RotationDegrees.Y; //See note in _Input about how Mouse/player rotation axis (x & y) are flipped
 
-		_playerInput = GetNodeOrNull<PlayerInput>("PlayerInput");
 
         GD.Print($"Player._Ready() - PlayerID: {PlayerID}, MyUniqueID: {Multiplayer.GetUniqueId()}, Match: {PlayerID == Multiplayer.GetUniqueId()}");
         SetupCamera();

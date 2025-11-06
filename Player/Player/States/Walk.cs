@@ -15,35 +15,13 @@ public partial class Walk : PlayerState
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void PhysicsUpdate(double delta)
 	{
-		
-		Vector3 direction = Vector3.Zero;
 		Vector3 velocity = player.Velocity;
-		Vector3 forward = -player.GlobalTransform.Basis.Z.Normalized(); 
-		Vector3 right = -player.GlobalTransform.Basis.X.Normalized(); 
 
-		if (Input.IsActionJustPressed("jump")) {
-       	 	EmitSignal(SignalName.Finished, JUMPING);
-    	}
-				
-		if (Input.IsActionPressed("move_left")) {
-			direction -= right;
-		}
-		if (Input.IsActionPressed("move_right")) {
-			direction += right;
-		}
-		if (Input.IsActionPressed("move_forward")) {
-			direction -= forward;
-			//animation.Play("Back Camera"); 
-			
-		}
-		if (Input.IsActionPressed("move_back")) {
-			direction += forward;
-			//animation.Play("Front Camera");
-		}
-
+		Vector3 direction = new Vector3(player.PlayerInput.inputDir.X, 0, player.PlayerInput.inputDir.Y);
 
 		if (direction != Vector3.Zero) {
 			direction = direction.Normalized();
+
 		}
 		
 		if (Input.IsActionPressed("sprint")) {
@@ -57,9 +35,9 @@ public partial class Walk : PlayerState
 		}
 		
 		velocity.Y = player.Velocity.Y;
-		
 
-		player.Velocity = velocity;
+		player.Velocity = velocity * player.GlobalTransform.Basis.Inverse();
+		
 		player.MoveAndSlide();	
 
 		if (!player.IsOnFloor()) {
