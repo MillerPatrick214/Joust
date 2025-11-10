@@ -1,11 +1,14 @@
  using Godot;
 using Godot.Collections;
 
+[Tool]
 public partial class BoneHandler : Node3D
 {
+    [ExportGroup("Skeletons")]
     [Export] public Skeleton3D IKTargetSkeleton;
     [Export] public Skeleton3D PhysicsSkeleton;
-    [Export] public Skeleton3D DisplaySkeleton;
+
+    [ExportToolButton("Fix PhysicsSkeleton Transforms", Icon = "Skeleton3D")] public Callable FixSkeletonButton => Callable.From(FixPhysicsSkeleton);
 
     [ExportGroup("Linear Controls")]
     [Export] public float LinearStiffness = 1200f;
@@ -31,9 +34,53 @@ public partial class BoneHandler : Node3D
     private Godot.Collections.Dictionary<int, Transform3D> _cachedModifiedPoses = new();
 
 
+    public void FixPhysicsSkeleton()
+    {
+        PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
+        _bones.Clear();
+
+        foreach (var c in PhysicsSkeleton.GetChildren())
+        {
+            if (c is PhysicalBoneSimulator3D pbs) _sim = pbs;
+        }
+
+        foreach (var cc in _sim.GetChildren())
+        {
+            if (cc is PhysicalBone3D pb)
+            {
+                _bones.Add(pb);
+                int boneID = pb.GetBoneId();
+
+                // Calculate initial offset between bone pose and physical bone
+                Transform3D physBonePose = PhysicsSkeleton.GlobalTransform * PhysicsSkeleton.GetBoneGlobalPose(boneID);
+                
+                // Calculate the correction (offset between skeleton bone and physical bone)
+                Transform3D correction = physBonePose.AffineInverse() * pb.GlobalTransform;
+
+                Transform3D alignedTransform = IKTargetSkeleton.GlobalTransform * IKTargetSkeleton.GetBoneGlobalPose(boneID);
+
+                pb.GlobalTransform = alignedTransform * correction;
+
+                CollisionShape3D collShape = pb.GetChild<CollisionShape3D>(0);
+                float shapeLen = (float)collShape.Shape.Get("height");
+
+
+                collShape.Position = new Vector3(0, shapeLen / 2.0f, 0); // divide shape len by 2 and set as y.
+                                                                         // Given Pos is at the center or the shape, we want to offset the shape so it aigns with bone
+                
+            }
+            
+        }
+    }
+
+
     public override void _Ready()
     {
         PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
+
+        _bones.Clear();
+        _boneCorrections.Clear();
+
         IKTargetSkeleton.SkeletonUpdated += OnSkeletonUpdated;
         _player = GetParent<CharacterBody3D>();
 
@@ -64,7 +111,7 @@ public partial class BoneHandler : Node3D
         _sim.PhysicalBonesStartSimulation();
 
     }
-    
+
     public Transform3D GetBoneCachedPose(int boneID)
     {
         return _cachedModifiedPoses[boneID];
@@ -74,7 +121,7 @@ public partial class BoneHandler : Node3D
     {
         DriveBones(delta);
     }
-    
+
     private void OnSkeletonUpdated()
     {
         // Capture all modified bone poses while they're still applied
@@ -89,7 +136,7 @@ public partial class BoneHandler : Node3D
     }
     public void DriveBones(double delta)
     {
-        
+
         foreach (var pb in _bones)
         {
             int pbID = pb.GetBoneId();
@@ -132,31 +179,31 @@ public partial class BoneHandler : Node3D
             // === ANGULAR (Rotation) Control ===
             Quaternion currentQuat = new Quaternion(currentPose.Basis.Orthonormalized());
             Quaternion targetQuat = new Quaternion(correctedTarget.Basis.Orthonormalized());
-            
+
             // Normalize quaternions
             currentQuat = currentQuat.Normalized();
             targetQuat = targetQuat.Normalized();
-            
+
             // === ANGULAR (Rotation) Control ===
             Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
-            
+
             // Convert to axis-angle (Euler can have gimbal lock issues, but tutorial uses it)
             Vector3 angularDisplacement = rotationDifference.GetEuler();
-            
+
             // Normalize angles to [-PI, PI] range
             angularDisplacement.X = NormalizeAngle(angularDisplacement.X);
             angularDisplacement.Y = NormalizeAngle(angularDisplacement.Y);
             angularDisplacement.Z = NormalizeAngle(angularDisplacement.Z);
-            
+
             // Hooke's Law for rotation: T = kθ - cω
             Vector3 torque = (AngularStiffness * angularDisplacement) - (AngularDampening * pb.AngularVelocity);
-            
+
             // Clamp
             if (torque.Length() > MaxTorque)
             {
                 torque = torque.Normalized() * MaxTorque;
             }
-            
+
             pb.AngularVelocity += torque * (float)delta;
         }
     }
