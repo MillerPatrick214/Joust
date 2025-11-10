@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=4 uid="uid://dlvxg8weah262"]
 
-[ext_resource type="Script" uid="uid://dkg27gc75osfk" path="res://Items/Weapons/Sword/Sword.cs" id="1_74bdg"]
+[ext_resource type="Script" uid="uid://byenmwn22y1k" path="res://Items/Held/HeldItem3D.cs" id="1_m5ijq"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_igby5"]
 
@@ -40,10 +40,13 @@ shadow_mesh = SubResource("ArrayMesh_u8d1b")
 radius = 0.020996094
 height = 0.75
 
-[node name="Sword" type="RigidBody3D"]
+[node name="Sword" type="RigidBody3D" node_paths=PackedStringArray("RightGrip")]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 mass = 0.001
-script = ExtResource("1_74bdg")
+script = ExtResource("1_m5ijq")
+Kind = 1
+RightGrip = NodePath("MarkerHand_R")
+metadata/_custom_type_script = "uid://byenmwn22y1k"
 
 [node name="Handle" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.051196, 0)
