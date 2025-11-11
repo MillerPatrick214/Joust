@@ -3,7 +3,7 @@ using System;
 
 public partial class StateMachine : Node
 {
-	State state; 		
+	State state;
 
 	public override void _Ready()
 	{

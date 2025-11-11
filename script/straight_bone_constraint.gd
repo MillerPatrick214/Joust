@@ -6,13 +6,13 @@ class_name StraightBoneConstraint extends GodotIKConstraint
 ## between the parent and child bones, removing any bending.
 
 ## Whether the constraint is currently active.
-@export var active : bool = true
+@export var active: bool = true
 
 ## If true, the constraint applies when the IK solver iterates forward.
-@export var forward : bool = true
+@export var forward: bool = true
 
 ## If true, the constraint applies when the IK solver iterates backward.
-@export var backward : bool = true
+@export var backward: bool = true
 
 ## This function overwrite modifies the mid-bone position to ensure it stays in a straight line
 ## between the parent and child bones.
@@ -20,9 +20,9 @@ func apply(
 		pos_parent_bone: Vector3,
 		pos_bone: Vector3,
 		pos_child_bone: Vector3,
-		chain_dir : Dir
+		chain_dir: Dir
 	) -> PackedVector3Array:
-	var result : PackedVector3Array = [pos_parent_bone, pos_bone, pos_child_bone]
+	var result: PackedVector3Array = [pos_parent_bone, pos_bone, pos_child_bone]
 
 	if not active: return result
 	if not forward and FORWARD or not backward and BACKWARD:
@@ -31,7 +31,7 @@ func apply(
 	var dir_parent_child = pos_parent_bone.direction_to(pos_child_bone)
 	var len_parent_bone = pos_parent_bone.distance_to(pos_bone)
 	var len_bone_child = pos_bone.distance_to(pos_child_bone)
-	var vec_parent_bone = pos_bone - pos_parent_bone
+	# var vec_parent_bone = pos_bone - pos_parent_bone
 
 	match chain_dir:
 		FORWARD:

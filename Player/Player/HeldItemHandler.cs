@@ -321,10 +321,10 @@ public partial class HeldItemHandler : Node3D
                 targetBasis = new Basis(aoaRotation) * targetBasis;
 
                 // Smoothly slerp current wrist orientation toward target basis.
-                var curQ = new Quaternion(RightHandIKTarget.GlobalTransform.Basis);
-                var dstQ = new Quaternion(targetBasis);
+                Quaternion curQ = RightHandIKTarget.GlobalTransform.Basis.GetRotationQuaternion().Normalized();
+                Quaternion dstQ = targetBasis.Orthonormalized().GetRotationQuaternion().Normalized();
                 float alpha = 1f - Mathf.Exp(-15f * (float)dt);
-                Quaternion newQ = curQ.Slerp(dstQ, alpha);
+                Quaternion newQ = curQ.Slerp(dstQ, alpha).Normalized();
 
                 // Write position + orientation.
                 RightHandIKTarget.GlobalTransform = new Transform3D(new Basis(newQ), targetPos);

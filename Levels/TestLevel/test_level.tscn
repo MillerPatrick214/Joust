@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://mmnl8lnjrasv"]
 
 [ext_resource type="ArrayMesh" uid="uid://mvo2cleqpker" path="res://Levels/TestLevel/Assets/Mud/Mud.res" id="1_brg3y"]
-[ext_resource type="PackedScene" uid="uid://c4f4fvlpdtr80" path="res://Player/Player/Player.tscn" id="3_up0yw"]
+[ext_resource type="PackedScene" uid="uid://b7qn6mmf4getv" path="res://Player/Player/Player.tscn" id="3_up0yw"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hsoxx"]
 size = Vector3(150, 2, 150)
@@ -9,6 +9,7 @@ size = Vector3(150, 2, 150)
 [node name="TestLevel" type="Node3D"]
 
 [node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 collision_layer = 7
 collision_mask = 7
 
@@ -24,4 +25,4 @@ mesh = ExtResource("1_brg3y")
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0.503793, 3.49627, 0.284348)
 
 [node name="Player" parent="." instance=ExtResource("3_up0yw")]
-transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, 0, 0.28349733, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2834973, 0)
