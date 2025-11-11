@@ -1,4 +1,6 @@
 using Godot;
+using Godot.Collections;
+
 
 
 [Tool]
@@ -39,6 +41,9 @@ public partial class BoneHandler : Node3D
     // Sets physical bones and their collision shapes transformations to match the IK skeleton
     public void FixPhysicsSkeleton()
     {
+        Dictionary<int, float> collShapeDict = new();
+        GenCollShapes(collShapeDict); 
+        
         GD.Print("[BoneHandler/FixPhysicsSkeleton] Starting...");
 
         PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
@@ -89,12 +94,26 @@ public partial class BoneHandler : Node3D
                 switch (collShape.Shape)
                 {
                     case CapsuleShape3D cap:
+                        if (collShapeDict.ContainsKey(boneID))
+                        {
+                            cap.Height = collShapeDict[boneID];
+                        }
                         collShape.Position = new Vector3(0, cap.Height * 0.5f, 0);
                         break;
+
                     case CylinderShape3D cyl:
+                        if (collShapeDict.ContainsKey(boneID))
+                        {
+                            cyl.Height = collShapeDict[boneID];
+                        }
                         collShape.Position = new Vector3(0, cyl.Height * 0.5f, 0);
                         break;
+
                     case BoxShape3D box:
+                        if (collShapeDict.ContainsKey(boneID))
+                        {
+                            box.Size = new Vector3(collShapeDict[boneID], collShapeDict[boneID], collShapeDict[boneID]); //Note, this only makes a cube at the moment. May need work. 
+                        }
                         collShape.Position = new Vector3(0, box.Size.Y * 0.5f, 0);
                         break;
                     default:
@@ -103,9 +122,37 @@ public partial class BoneHandler : Node3D
                 }
             }
         }
-
         GD.PrintRich("[color=green][BoneHandler/FixPhysicsSkeleton] Ran successfully.[/color]");
     }
+
+    private void GenCollShapes(Dictionary<int, float> CollShapeLengths, int? ParentID = null, int selfID = 0, int recursiontrackdebug = 0)
+    {
+        int[] boneChildren = PhysicsSkeleton.GetBoneChildren(selfID);
+        foreach (int childID in boneChildren)
+        {
+            string indent = "";
+
+            for (int i = 0; i < recursiontrackdebug; i++)
+            {
+                indent = indent + " ";
+            }
+            GD.Print($"{indent}{childID}");
+
+            if (ParentID != null)
+            {
+                ParentID = (int)ParentID;
+                CollShapeLengths[selfID] = PhysicsSkeleton.GetBonePosePosition(selfID+1).Y;
+                
+                //GD.Print($"PhysicsSkeleton.GetBonePosePosition(selfID).Y: {PhysicsSkeleton.GetBonePosePosition(selfID).Y}");
+            }
+
+            if (!PhysicsSkeleton.GetBoneChildren(childID).IsEmpty())
+            {
+                GenCollShapes(CollShapeLengths, selfID, childID, recursiontrackdebug + 1); // selfid passed to parentID, childId passed to selfId
+            }
+        }
+    }
+    
 
     // Sets the transforms of IK targets (hands and feet) to match IK target skeleton
     public void ResetIKTargets()

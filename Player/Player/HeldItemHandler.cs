@@ -144,7 +144,7 @@ public partial class HeldItemHandler : Node3D
         j.SetParamZ(Generic6DofJoint3D.Param.AngularUpperLimit, 0f);
     }
 
-    public void Toss(Vector3 tossImpulse, Vector3 tossTorqueImpulse)
+    public void Toss(Vector3 tossImpulse, Vector3 tossTorqueImpulse) // *TODO -- Not currently implemented
     {
         // Remove joint first to detach physics link.
         _joint.Free();
@@ -159,7 +159,6 @@ public partial class HeldItemHandler : Node3D
         _held.ApplyTorqueImpulse(tossTorqueImpulse);
 
         _isTwoHanded = false;
-        _held.QueueFree();
         _held = null;
     }
 
