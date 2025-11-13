@@ -176,7 +176,7 @@ public partial class Player : CharacterBody3D
             _stepDownTarget = CurrFootIsRight ? desiredR
                                                 : desiredL;
 
-            _footStartPos = CurrFootIsRight ? RFootIKTarget.GlobalPosition
+            _footStartPos = CurrFootIsRight ?   RFootIKTarget.GlobalPosition
                                                 : LFootIKTarget.GlobalPosition;
 
             _stepProgress = 0;
@@ -218,7 +218,6 @@ public partial class Player : CharacterBody3D
     Velocity only during step other just move hips? Torso? (Maybe)
     Ray cast from hips down?
     Sine wave interp for foot up/down movement?
-
 
     I feel like max distance from IK target is an erroneous way to time steps. Ideally, we would want IK target & foot to be synced 24/7 as this means we haven't exceeded the limits of our IK skeleton. need to think about this more.
 */

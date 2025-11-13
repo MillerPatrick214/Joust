@@ -47,12 +47,16 @@ public partial class BoneHandler : Node3D
         GD.Print("[BoneHandler/FixPhysicsSkeleton] Starting...");
 
         PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
+        Transform3D playerTransform = _player.GlobalTransform;
+        PhysicsSkeleton.GlobalTransform = playerTransform * IKTargetSkeleton.Transform; //Make the skeleton face the same way as the player!
+
         _bones.Clear();
 
         foreach (var c in PhysicsSkeleton.GetChildren())
         {
             if (c is PhysicalBoneSimulator3D pbs) _sim = pbs;
         }
+        
         if (_sim is null)
         {
             GD.PrintErr($"[BoneHandler/FixPhysicsSkeleton] Can't find PhysicalBoneSimulator3D child of {PhysicsSkeleton.Name}. Exiting...");
@@ -71,8 +75,11 @@ public partial class BoneHandler : Node3D
                     continue;
                 }
 
+                PhysicsSkeleton.SetBoneRest(boneID, IKTargetSkeleton.GetBonePose(boneID));
+
                 Transform3D targetIKPose = IKTargetSkeleton.GlobalTransform * IKTargetSkeleton.GetBoneGlobalPose(boneID);
                 Transform3D targetInPhys = PhysicsSkeleton.GlobalTransform.AffineInverse() * targetIKPose;
+                
                 PhysicsSkeleton.SetBoneGlobalPose(boneID, targetInPhys);
                 pb.GlobalTransform = targetIKPose;
 
