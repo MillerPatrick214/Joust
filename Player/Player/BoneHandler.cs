@@ -1,6 +1,5 @@
 using Godot;
-using Godot.Collections;
-
+using System.Collections.Generic;
 
 
 [Tool]
@@ -14,24 +13,22 @@ public partial class BoneHandler : Node3D
     [ExportToolButton("Fix IK Target Transforms", Icon = "Marker3D")] public Callable FixIKButton => Callable.From(ResetIKTargets);
 
     [ExportGroup("Linear Controls")]
-    [Export] public float LinearStiffness = 1200f;
-    [Export] public float LinearDampening = 40f;
-    [Export] public float MaxLinearForce = 9999f;
+    [Export] public float LinearStiffness = 600;
+    [Export] public float LinearDampening = 30;
+    [Export] public float MaxLinearForce = 2500;
 
     [ExportGroup("Angular Controls")]
-    [Export] public float AngularStiffness = 1750.0f;
-    [Export] public float AngularDampening = 30.0f;
-    [Export] public float MaxTorque = 2000.0f;
+    [Export] public float AngularStiffness = 300;
+    [Export] public float AngularDampening = 15f;
+    [Export] public float MaxTorque = 1000;
 
 
     [ExportGroup("Stability")]
     [Export] public float MaxPositionError = 1f; // Clamp extreme errors
-    [Export] public float MaxAngularError = Mathf.Pi; // Clamp to 180 degrees
-    //[Export(PropertyHint.None, "suffix:degrees")] public double MinimumAngleForForce = 2.0f;
 
     private CharacterBody3D _player;
     private PhysicalBoneSimulator3D _sim;
-    private Godot.Collections.Array<PhysicalBone3D> _bones = new();
+    private List<PhysicalBone3D> _bones = new();
     private Godot.Collections.Dictionary<int, Transform3D> _boneCorrections = new();
     private Godot.Collections.Dictionary<PhysicalBone3D, Transform3D> _previousTargets = new();
     private Godot.Collections.Dictionary<int, Transform3D> _cachedModifiedPoses = new();
@@ -41,14 +38,11 @@ public partial class BoneHandler : Node3D
     // Sets physical bones and their collision shapes transformations to match the IK skeleton
     public void FixPhysicsSkeleton()
     {
-        Dictionary<int, float> collShapeDict = new();
-        GenCollShapes(collShapeDict); 
-        
         GD.Print("[BoneHandler/FixPhysicsSkeleton] Starting...");
 
-        PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
-        Transform3D playerTransform = _player.GlobalTransform;
-        PhysicsSkeleton.GlobalTransform = playerTransform * IKTargetSkeleton.Transform; //Make the skeleton face the same way as the player!
+        if (_player == null) _player = GetParentOrNull<CharacterBody3D>();
+        IKTargetSkeleton.GlobalTransform = _player.GlobalTransform;
+        PhysicsSkeleton.GlobalTransform = _player.GlobalTransform * IKTargetSkeleton.Transform;  //Make the skeleton face the same way as the player!
 
         _bones.Clear();
 
@@ -56,11 +50,24 @@ public partial class BoneHandler : Node3D
         {
             if (c is PhysicalBoneSimulator3D pbs) _sim = pbs;
         }
-        
+
         if (_sim is null)
         {
             GD.PrintErr($"[BoneHandler/FixPhysicsSkeleton] Can't find PhysicalBoneSimulator3D child of {PhysicsSkeleton.Name}. Exiting...");
             return;
+        }
+
+        for (int i = 0; i < PhysicsSkeleton.GetBoneCount(); i++)
+        {
+            string bName = PhysicsSkeleton.GetBoneName(i);
+            int bID = IKTargetSkeleton.FindBone(bName);
+            if (bID == -1)
+            {
+                GD.PrintErr($"[BoneHandler/FixPhysicsSkeleton] Bone '{bName}' not found in IKTargetSkeleton. Skipping.");
+                continue;
+            }
+            Transform3D ikRest = IKTargetSkeleton.GetBoneRest(bID);
+            PhysicsSkeleton.SetBoneRest(i, ikRest);
         }
 
         foreach (var cc in _sim.GetChildren())
@@ -75,91 +82,19 @@ public partial class BoneHandler : Node3D
                     continue;
                 }
 
-                PhysicsSkeleton.SetBoneRest(boneID, IKTargetSkeleton.GetBonePose(boneID));
+                // these add bloat to the .tscn file
+                pb.AngularVelocity = Godot.Vector3.Zero;
+                pb.LinearVelocity = Godot.Vector3.Zero;
 
                 Transform3D targetIKPose = IKTargetSkeleton.GlobalTransform * IKTargetSkeleton.GetBoneGlobalPose(boneID);
                 Transform3D targetInPhys = PhysicsSkeleton.GlobalTransform.AffineInverse() * targetIKPose;
-                
+
                 PhysicsSkeleton.SetBoneGlobalPose(boneID, targetInPhys);
                 pb.GlobalTransform = targetIKPose;
-
-                CollisionShape3D collShape = pb.GetChildOrNull<CollisionShape3D>(0);
-                if (collShape is null)
-                {
-                    GD.Print($"[BoneHandler/FixPhysicsSkeleton] {pb.Name} has no CollisionShape3D resource. Skipping...");
-                    continue;
-                }
-
-                collShape.Scale = new Godot.Vector3(1.0f, 1.0f, 1.0f);
-
-                if (collShape.Shape == null)
-                {
-                    GD.Print($"[BoneHandler/FixPhysicsSkeleton] {pb.Name} CollisionShape3D has no Shape resource. Skipping...");
-                    continue;
-                }
-
-                switch (collShape.Shape)
-                {
-                    case CapsuleShape3D cap:
-                        if (collShapeDict.ContainsKey(boneID))
-                        {
-                            cap.Height = collShapeDict[boneID];
-                        }
-                        collShape.Position = new Vector3(0, cap.Height * 0.5f, 0);
-                        break;
-
-                    case CylinderShape3D cyl:
-                        if (collShapeDict.ContainsKey(boneID))
-                        {
-                            cyl.Height = collShapeDict[boneID];
-                        }
-                        collShape.Position = new Vector3(0, cyl.Height * 0.5f, 0);
-                        break;
-
-                    case BoxShape3D box:
-                        if (collShapeDict.ContainsKey(boneID))
-                        {
-                            box.Size = new Vector3(collShapeDict[boneID], collShapeDict[boneID], collShapeDict[boneID]); //Note, this only makes a cube at the moment. May need work. 
-                        }
-                        collShape.Position = new Vector3(0, box.Size.Y * 0.5f, 0);
-                        break;
-                    default:
-                        GD.Print($"[BoneHandler] {pb.Name} uses {collShape.Shape.GetClass()} (no height property). Skipping...");
-                        break;
-                }
             }
         }
         GD.PrintRich("[color=green][BoneHandler/FixPhysicsSkeleton] Ran successfully.[/color]");
     }
-
-    private void GenCollShapes(Dictionary<int, float> CollShapeLengths, int? ParentID = null, int selfID = 0, int recursiontrackdebug = 0)
-    {
-        int[] boneChildren = PhysicsSkeleton.GetBoneChildren(selfID);
-        foreach (int childID in boneChildren)
-        {
-            string indent = "";
-
-            for (int i = 0; i < recursiontrackdebug; i++)
-            {
-                indent = indent + " ";
-            }
-            GD.Print($"{indent}{childID}");
-
-            if (ParentID != null)
-            {
-                ParentID = (int)ParentID;
-                CollShapeLengths[selfID] = PhysicsSkeleton.GetBonePosePosition(selfID+1).Y;
-                
-                //GD.Print($"PhysicsSkeleton.GetBonePosePosition(selfID).Y: {PhysicsSkeleton.GetBonePosePosition(selfID).Y}");
-            }
-
-            if (!PhysicsSkeleton.GetBoneChildren(childID).IsEmpty())
-            {
-                GenCollShapes(CollShapeLengths, selfID, childID, recursiontrackdebug + 1); // selfid passed to parentID, childId passed to selfId
-            }
-        }
-    }
-    
 
     // Sets the transforms of IK targets (hands and feet) to match IK target skeleton
     public void ResetIKTargets()
@@ -169,12 +104,12 @@ public partial class BoneHandler : Node3D
         foreach (string target in ikTargets)
         {
             var targetIK = IKTargetSkeleton.FindChild($"IK {target}", false, false);
-            var ik3DSkeleton = IKTargetSkeleton.FindChild($"{target} SkeletonIK3D", false, false);
-            if (targetIK is Marker3D ik && ik3DSkeleton is SkeletonIK3D ik3D)
+            var ik3D = IKTargetSkeleton.FindChild($"{target} SkeletonIK3D", false, false);
+            if (targetIK is Marker3D ik && ik3D is SkeletonIK3D ik3)
             {
-                string targetName = ik3D.TipBone;
+                string targetName = ik3.TipBone;
                 int targetID = IKTargetSkeleton.FindBone(targetName);
-                if (targetID > 0)
+                if (targetID >= 0)
                 {
                     Transform3D targetPose = IKTargetSkeleton.GlobalTransform * IKTargetSkeleton.GetBoneGlobalPose(targetID);
                     ik.GlobalTransform = targetPose;
@@ -185,17 +120,26 @@ public partial class BoneHandler : Node3D
         }
     }
 
+    private void StopIK()
+    {
+        Godot.Collections.Array<string> ikTargets = new Godot.Collections.Array<string> { "Hand_R", "Hand_L", "Foot_R", "Foot_L" };
+
+        foreach (string target in ikTargets)
+        {
+            var targetIK = IKTargetSkeleton.FindChild($"IK {target}", false, false);
+            var ik3D = IKTargetSkeleton.FindChild($"{target} SkeletonIK3D", false, false);
+            if (targetIK is Marker3D ik && ik3D is SkeletonIK3D ik3) ik3.Stop();
+        }
+    }
+
+
     public override void _Ready()
     {
         PhysicsSkeleton.GlobalTransform = IKTargetSkeleton.GlobalTransform;
-
         _bones.Clear();
         _boneCorrections.Clear();
-
         IKTargetSkeleton.SkeletonUpdated += OnSkeletonUpdated;
         _player = GetParentOrNull<CharacterBody3D>();
-
-        OnSkeletonUpdated(); // Run once to init bone cache
 
         foreach (var c in PhysicsSkeleton.GetChildren())
         {
@@ -212,13 +156,18 @@ public partial class BoneHandler : Node3D
                 // Calculate initial offset between bone pose and physical bone
                 Transform3D physBonePose = PhysicsSkeleton.GlobalTransform * PhysicsSkeleton.GetBoneGlobalPose(boneID);
                 Transform3D correction = physBonePose.AffineInverse() * pb.GlobalTransform;
-                _boneCorrections[boneID] = correction;
+                if (!correction.IsFinite())
+                {
+                    GD.PrintErr($"[BoneHandler.cs/_Ready] Invalid bone correction for bone {pb.Name} (ID: {boneID})");
+                    correction = Transform3D.Identity; // Use identity as fallback
+                }
 
-                // Initialize previous target
+                _boneCorrections[boneID] = correction;
                 _previousTargets[pb] = pb.GlobalTransform;
             }
         }
 
+        OnSkeletonUpdated(); // Run once to init bone cache
         _sim.PhysicalBonesStartSimulation();
 
     }
@@ -232,12 +181,6 @@ public partial class BoneHandler : Node3D
             return new Transform3D();
         }
     }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        DriveBones(delta);
-    }
-
     private void OnSkeletonUpdated()
     {
         // Capture all modified bone poses while they're still applied
@@ -245,21 +188,25 @@ public partial class BoneHandler : Node3D
         foreach (var pb in _bones)
         {
             int boneId = pb.GetBoneId();
-            // Get the MODIFIED global pose (includes IK)
 
+            // Get the MODIFIED global pose (includes IK)
             _cachedModifiedPoses[boneId] = IKTargetSkeleton.GetBoneGlobalPose(boneId);
         }
     }
-    public void DriveBones(double delta)
-    {
 
+    public override void _PhysicsProcess(double delta)
+    {
+        DriveBones(delta);
+    }
+
+    private void DriveBones(double delta)
+    {
         foreach (var pb in _bones)
         {
             int pbID = pb.GetBoneId();
-            float mass = pb.Mass;
-            if (mass <= 0) mass = 1f;
+            if (pb.Mass <= 0) pb.Mass = 1f;
 
-            if (!_cachedModifiedPoses.TryGetValue(pbID, out Transform3D modP)) return;
+            if (!_cachedModifiedPoses.TryGetValue(pbID, out Transform3D modP)) continue;
 
             // Get target pose
             Transform3D targetPose = IKTargetSkeleton.GlobalTransform * modP;
@@ -268,71 +215,148 @@ public partial class BoneHandler : Node3D
             // Get current pose
             Transform3D currentPose = pb.GlobalTransform;
 
-            // === LINEAR (Position) Control ===
-            Vector3 displacement = correctedTarget.Origin - currentPose.Origin;
+            // ══════════════════════════════════════════════════════════════
+            // LINEAR CONTROL - PD with Feed-Forward (Moving Target)
+            // ══════════════════════════════════════════════════════════════
+            // Makes position error decay exponentially: de/dt = -k_p × e
+            //
+            //   e = x_target - x_current          (position error)
+            //   de/dt = v_target - v_current      (derivative of error)
+            //
+            // de/dt = -k_p × e, solve for v_current:
+            //   v_target - v_current = -k_p × e
+            //   v_current = v_target + k_p × e    (desired velocity)
+            //
+            // Discrete implementation:
+            //   k_p = Stiffness/Dampening, k_d = Dampening
+            //   v_cmd = v_target + k_p × e
+            //   Δv = k_d × (v_cmd - v_current) × Δt
+            //   v_new = v_current + Δv
+            // ══════════════════════════════════════════════════════════════
+            // 1. Estimate target velocity (feed-forward)
+            Vector3 targetVelocity = Vector3.Zero;
+            if (_previousTargets.TryGetValue(pb, out Transform3D prevTarget))
+            {
+                // v_target = Δx / Δt = (x_current - x_previous) / dt
+                targetVelocity = (correctedTarget.Origin - prevTarget.Origin) / (float)delta;
+            }
+            _previousTargets[pb] = correctedTarget;
 
-            // Teleport if too far (prevents explosive forces)
-            if (displacement.LengthSquared() > MaxPositionError * MaxPositionError)
+            // 2. Position error: e = x_target - x_current
+            Vector3 positionError = correctedTarget.Origin - currentPose.Origin;
+            float dSq = positionError.LengthSquared();
+
+            if (dSq > MaxPositionError * MaxPositionError)  // Teleport if too far (prevents explosive forces)
             {
                 pb.GlobalPosition = correctedTarget.Origin;
                 pb.LinearVelocity = Vector3.Zero;
             }
-            else
+            else if (dSq > 0.0001f)
             {
-                // Hooke's Law: F = kx - cv
-                Vector3 force = (LinearStiffness * displacement) - (LinearDampening * pb.LinearVelocity);
+                // 3. Commanded velocity: v_cmd = v_target + k_p × e
+                float k_p = LinearStiffness / LinearDampening;
+                Vector3 velocityCmd = targetVelocity + k_p * positionError;
+                // 4. Velocity correction with damping
+                Vector3 velocityError = velocityCmd - pb.LinearVelocity;  // v_error = v_cmd - v_current
+                Vector3 velocityChange = LinearDampening * velocityError * (float)delta;  // Δv = k_d × v_error × Δt
 
-                // Scale by mass (F = ma, so we need force proportional to mass)
-                force *= mass;
-
-                // Clamp
-                if (force.Length() > MaxLinearForce)
+                float maxVelChange = MaxLinearForce * (float)delta;
+                if (velocityChange.LengthSquared() > maxVelChange * maxVelChange)
                 {
-                    force = force.Normalized() * MaxLinearForce;
+                    GD.Print("[BoneHandler.cs/DriveBones] Max Linear Force exceeded. Normalizing to max force.");
+                    velocityChange = velocityChange.Normalized() * maxVelChange;
                 }
 
-                pb.LinearVelocity += force * (float)delta;
+                pb.LinearVelocity += velocityChange;
             }
 
-            // === ANGULAR (Rotation) Control ===
-            // Quaternion currentQuat = new Quaternion(currentPose.Basis.Orthonormalized());
-            // Quaternion targetQuat = new Quaternion(correctedTarget.Basis.Orthonormalized());
-
-            // // Normalize quaternions
-            // currentQuat = currentQuat.Normalized();
-            // targetQuat = targetQuat.Normalized();
-
-            // === ANGULAR (Rotation) Control ===
-            Basis rotationDifference = correctedTarget.Basis * currentPose.Basis.Inverse();
-
-            // Convert to axis-angle (Euler can have gimbal lock issues, but tutorial uses it)
-            Vector3 angularDisplacement = rotationDifference.GetEuler();
-
-            // Normalize angles to [-PI, PI] range
-            angularDisplacement.X = NormalizeAngle(angularDisplacement.X);
-            angularDisplacement.Y = NormalizeAngle(angularDisplacement.Y);
-            angularDisplacement.Z = NormalizeAngle(angularDisplacement.Z);
-
-            // Hooke's Law for rotation: T = kθ - cω
-            Vector3 torque = (AngularStiffness * angularDisplacement) - (AngularDampening * pb.AngularVelocity);
-
-            // Clamp
-            if (torque.Length() > MaxTorque)
+            // ══════════════════════════════════════════════════════════════
+            // ANGULAR CONTROL - PD with Feed-Forward (Moving Target)
+            // ══════════════════════════════════════════════════════════════
+            // Makes rotation error decay exponentially
+            //
+            // Math (analogous to linear):
+            //   e_rot = rotation from current to target    (angular error)
+            //   ω_target = angular velocity of target      (feed-forward)
+            //   ω_cmd = ω_target + k_p × e_rot            (desired angular velocity)
+            //   Δω = k_d × (ω_cmd - ω_current) × Δt      (angular velocity change)
+            //
+            // Where:
+            //   k_p = AngularStiffness / AngularDampening
+            //   k_d = AngularDampening
+            // ══════════════════════════════════════════════════════════════
+            // 1. Estimate target angular velocity (feed-forward term)
+            //    ω_target ≈ ΔR / Δt (change in rotation over time)
+            Vector3 targetAngularVelocity = Vector3.Zero;
+            if (_previousTargets.TryGetValue(pb, out Transform3D prevRotTarget))
             {
-                torque = torque.Normalized() * MaxTorque;
+                Quaternion prevRot = prevRotTarget.Basis.GetRotationQuaternion().Normalized();
+                Quaternion currentTargetRot = correctedTarget.Basis.GetRotationQuaternion().Normalized();
+
+                Quaternion rotDelta = currentTargetRot * prevRot.Inverse();
+                if (rotDelta.W < 0f) rotDelta = -rotDelta;
+
+                float angDelta = rotDelta.GetAngle();
+                if (angDelta > 0.001f && angDelta < Mathf.Pi)
+                {
+                    Vector3 axisDelta = rotDelta.GetAxis();
+                    if (axisDelta.IsFinite() && axisDelta.LengthSquared() > 0.0001f)
+                    {
+                        axisDelta = axisDelta.Normalized();
+                        if (angDelta > Mathf.Pi) angDelta -= Mathf.Tau;  // Normalize angle to [-π, π]
+
+                        targetAngularVelocity = axisDelta * angDelta / (float)delta;  // ω = θ / Δt (angular displacement over time)
+                    }
+                }
             }
 
-            pb.AngularVelocity += torque * (float)delta;
+            // 2. Rotation error: Convert rotation difference to axis-angle representation
+            Basis currentBasis = currentPose.Basis.Orthonormalized();
+            Basis targetBasis = correctedTarget.Basis.Orthonormalized();
+
+            Quaternion currentRot = currentBasis.GetRotationQuaternion().Normalized();
+            Quaternion targetRot = targetBasis.GetRotationQuaternion().Normalized();
+
+            if (!currentRot.IsFinite() || !targetRot.IsFinite())
+            {
+                GD.PrintErr($"Invalid rotation quaternion for bone {pb.Name}");
+                continue;
+            }
+
+            Quaternion errRot = targetRot * currentRot.Inverse();
+            if (errRot.W < 0f) errRot = -errRot;
+
+            float angle = errRot.GetAngle();
+
+            if (angle > 0.001f && angle < Mathf.Pi)
+            {
+                Vector3 axis = errRot.GetAxis();
+
+                if (!axis.IsFinite() || axis.LengthSquared() < 0.0001f)
+                {
+                    continue;
+                }
+                axis = axis.Normalized();
+                if (angle > Mathf.Pi) angle -= Mathf.Tau;  // Normalize angle to [-π, π]
+
+                Vector3 angularErr = axis * angle;  // Angular error vector: e_rot = axis × angle
+
+                float k_p_angular = AngularStiffness / AngularDampening;
+                Vector3 angularVelocityCmd = targetAngularVelocity + k_p_angular * angularErr;  // ω_cmd = ω_target + k_p × e_rot
+
+                // 3. Angular velocity correction with damping: Δω = k_d × (ω_cmd - ω_current) × Δt
+                Vector3 angularVelocityError = angularVelocityCmd - pb.AngularVelocity;
+                Vector3 angularVelocityChange = AngularDampening * angularVelocityError * (float)delta;
+
+                float maxAngVelChange = MaxTorque * (float)delta;
+                if (angularVelocityChange.LengthSquared() > maxAngVelChange * maxAngVelChange)
+                {
+                    angularVelocityChange = angularVelocityChange.Normalized() * maxAngVelChange;
+                }
+
+                pb.AngularVelocity += angularVelocityChange;
+            }
         }
-    }
-
-
-
-    private float NormalizeAngle(float angle)
-    {
-        while (angle > Mathf.Pi) angle -= Mathf.Tau;
-        while (angle < -Mathf.Pi) angle += Mathf.Tau;
-        return angle;
     }
 }
 

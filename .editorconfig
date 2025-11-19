@@ -2,3 +2,9 @@ root = true
 
 [*]
 charset = utf-8
+
+# IDE0001: Simplify Names
+dotnet_diagnostic.IDE0001.severity = silent
+
+# IDE0001: Simplify Names
+dotnet_diagnostic.IDE0001.severity = none

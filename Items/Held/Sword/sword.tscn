@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=4 uid="uid://dlvxg8weah262"]
 
-[ext_resource type="Script" uid="uid://byenmwn22y1k" path="res://Items/Held/HeldItem3D.cs" id="1_m5ijq"]
+[ext_resource type="Script" uid="uid://byenmwn22y1k" path="res://Classes/HeldItem3D.cs" id="1_m5ijq"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_igby5"]
 

@@ -70,7 +70,6 @@ public partial class Player : CharacterBody3D
             if (GetNodeOrNull<PlayerInput>("PlayerInput") is Node PlayerInputNode)
             {
                 PlayerInputNode.SetMultiplayerAuthority(value);
-
             }
 
             else
@@ -86,7 +85,7 @@ public partial class Player : CharacterBody3D
     public override void _Ready()
     {
         Input.MouseMode = Input.MouseModeEnum.Captured;
-        Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. This will change if viewport size changes during gameplay\
+        Vector2 Resolution = GetViewport().GetVisibleRect().Size; //This needs to be elsewhere eventually. Will need a "GetViewport().SizeChanged +="
         //Input.MouseMode = Input.MouseModeEnum.Confined;
         AnimPlayer = GetNodeOrNull<AnimationPlayer>("AnimationPlayer");
         rFootBoneId = IKSkeleton.FindBone("Foot.R");
@@ -96,6 +95,8 @@ public partial class Player : CharacterBody3D
 
         GD.Print($"Player._Ready() - PlayerID: {PlayerID}, MyUniqueID: {Multiplayer.GetUniqueId()}, Match: {PlayerID == Multiplayer.GetUniqueId()}");
         SetupCamera();
+
+        ProcessMode = ProcessModeEnum.Always;  // TEMP: so unpause works after pause
     }
 
     private void SetupCamera()
@@ -109,7 +110,12 @@ public partial class Player : CharacterBody3D
 
     public override void _Input(InputEvent @e)
     {
-        if (@e.IsActionPressed("pause")) GetTree().Quit();
+        if (@e.IsActionPressed("pause"))
+        {
+            GetTree().Paused = !GetTree().Paused;
+            if (Input.MouseMode != Input.MouseModeEnum.Visible) Input.MouseMode = Input.MouseModeEnum.Visible;
+            else Input.MouseMode = Input.MouseModeEnum.Captured;
+        }
 
         if (@e is InputEventMouseMotion mouseMotion)
         { //mouseMotion is a local variable here
@@ -176,7 +182,7 @@ public partial class Player : CharacterBody3D
             _stepDownTarget = CurrFootIsRight ? desiredR
                                                 : desiredL;
 
-            _footStartPos = CurrFootIsRight ?   RFootIKTarget.GlobalPosition
+            _footStartPos = CurrFootIsRight ? RFootIKTarget.GlobalPosition
                                                 : LFootIKTarget.GlobalPosition;
 
             _stepProgress = 0;

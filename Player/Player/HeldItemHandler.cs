@@ -52,7 +52,11 @@ public partial class HeldItemHandler : Node3D
         GetViewport().SizeChanged += CalcScreenData;
 
         // Optionally equip default item after we’re in-tree.
-        if (DefaultWeaponScene != null) CallDeferred(nameof(_EquipDefault));
+        if (DefaultWeaponScene is not null)
+        {
+            GD.PrintErr($"{DefaultWeaponScene}: {DefaultWeaponScene.GetType()}");
+            CallDeferred(nameof(_EquipDefault));
+        }
     }
 
     private void CalcScreenData()
