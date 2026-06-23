@@ -1,0 +1,8 @@
+# Surmado Code Review config
+auto_review_on_open: true
+auto_review_on_push: false
+review_drafts: false
+language: en
+standards_path: .github/STANDARDS.md
+trigger_label: surmado-code-review
+godot_rag_enabled: true
