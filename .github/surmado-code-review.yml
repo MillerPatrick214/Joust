@@ -1,0 +1,82 @@
+# Surmado Code Review config
+#
+# Everything in this file is optional. Unset keys use sensible defaults.
+# Comments below explain each option.
+
+# Auto-review behaviour
+# ----------------------
+
+# Review on PR open / reopen / ready-for-review.
+# Default: true
+auto_review_on_open: true
+
+# Re-review automatically on every push to an open PR.
+# Default: true — the service reviews every push unless this is set.
+# We ship it as false here as a recommended starting point: re-reviews
+# then happen only when a reviewer comments `/rerun-review`, so
+# incremental commits don't burn through your monthly PR quota. Set true
+# to restore automatic review on every push.
+auto_review_on_push: false
+
+# Review draft PRs.
+# Default: false. Flip to true if your team typically wants review
+# on drafts before marking them ready.
+review_drafts: false
+
+# Which PRs to review
+# -------------------
+
+# 'all'     - review every PR
+# 'labeled' - only review PRs that carry `trigger_label` (below)
+# Default: all
+trigger_mode: all
+
+# Label that triggers review when trigger_mode is 'labeled'.
+# Default: surmado-code-review
+trigger_label: surmado-code-review
+
+# Standards doc
+# -------------
+
+# Where Scout reads your engineering standards from. Falls back to
+# `{owner}/.github/STANDARDS.md` if this file doesn't exist in the
+# repo being reviewed.
+# Default: .github/STANDARDS.md
+standards_path: .github/STANDARDS.md
+
+# Language for review comments (en, es, fr, pt, ja, it, de)
+# Default: en
+language: en
+
+# Dependency / import checks
+# --------------------------
+
+# The advisory check that flags imports of packages not in your manifests
+# (missing or AI-hallucinated dependencies). TypeScript path aliases (@/…),
+# node: builtins, and aliases declared in tsconfig.json/jsconfig.json
+# "paths" are detected automatically and never flagged. The secret-pattern
+# scan is separate and always runs — this toggle does not affect it.
+# Default: true
+dependency_check_enabled: true
+
+# Import specifiers to always treat as internal (never flagged). Use for
+# bundler-only aliases (vite/webpack/jest), monorepo workspace packages, or
+# baseUrl imports that aren't in tsconfig "paths". Entries are either an exact
+# specifier ("left-pad") or a prefix ending in "/" ("@myorg/" covers
+# @myorg/anything). Applies to JS/TS and Python imports.
+# Default: [] (none)
+# dependency_check_ignore:
+#   - "@myorg/"
+#   - "~assets"
+
+# Framework documentation context
+# -------------------------------
+
+# When true, the reviewer retrieves Godot 4.6 documentation chunks
+# (from Surmado's vector index — the same one that powers the
+# games.surmado.com chatbot) based on this PR's contents and includes
+# them as reference context in the review. Helps cut down on
+# hallucinated Godot API signatures. Only useful if this repo is a
+# Godot project — leave false otherwise.
+# Default: false
+godot_rag_enabled: true
