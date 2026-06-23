@@ -1,0 +1,7 @@
+{
+  "name": "surmado-dep-tests",
+  "private": true,
+  "dependencies": {
+    "swr": "^2.2.0"
+  }
+}
