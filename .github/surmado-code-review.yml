@@ -1,0 +1,21 @@
+# Surmado Code Review config
+#
+# Dependency-check test harness for the dependency_check_enabled /
+# dependency_check_ignore options. The ignore list below is read from this
+# (default) branch when the bot reviews PRs.
+
+auto_review_on_open: true
+auto_review_on_push: false
+
+# Dependency / import checks
+dependency_check_enabled: true
+
+# Treat these as internal and never flag them:
+#   "@acme/"   — prefix: any import starting with @acme/
+#   "left-pad" — exact: only the bare specifier left-pad
+dependency_check_ignore:
+  - "@acme/"
+  - "left-pad"
+
+# Godot project — pull Godot docs into reviews.
+godot_rag_enabled: true
