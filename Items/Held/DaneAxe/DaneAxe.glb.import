@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://bviurlaagkteh"
-path="res://.godot/imported/DaneAxe.glb-66ff1dcf16498f8b615a01fcb89b6338.scn"
+path="res://.godot/imported/DaneAxe.glb-19f0255b7a102739f2fc92a9498330c8.scn"
 
 [deps]
 
-source_file="res://Items/Weapons/DaneAxe/DaneAxe.glb"
-dest_files=["res://.godot/imported/DaneAxe.glb-66ff1dcf16498f8b615a01fcb89b6338.scn"]
+source_file="res://Items/Held/DaneAxe/DaneAxe.glb"
+dest_files=["res://.godot/imported/DaneAxe.glb-19f0255b7a102739f2fc92a9498330c8.scn"]
 
 [params]
 

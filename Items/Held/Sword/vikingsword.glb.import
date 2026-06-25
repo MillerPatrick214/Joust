@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cojrkprx8vbax"
-path="res://.godot/imported/vikingsword.glb-07bacc222aeefaba69d056c0a639b3eb.scn"
+path="res://.godot/imported/vikingsword.glb-044e325fc81475db545aaf00cc345068.scn"
 
 [deps]
 
-source_file="res://Items/Weapons/Sword/vikingsword.glb"
-dest_files=["res://.godot/imported/vikingsword.glb-07bacc222aeefaba69d056c0a639b3eb.scn"]
+source_file="res://Items/Held/Sword/vikingsword.glb"
+dest_files=["res://.godot/imported/vikingsword.glb-044e325fc81475db545aaf00cc345068.scn"]
 
 [params]
 

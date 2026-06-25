@@ -1,6 +1,5 @@
 // Player.cs
 using Godot;
-using System;
 
 public partial class Player : CharacterBody3D
 {
@@ -14,6 +13,7 @@ public partial class Player : CharacterBody3D
     [Export] public Marker3D ChestTarget;
     [Export] public StepHandler StepHandler;
     [Export] public BoneHandler BoneHandler;
+    [Export] public HeldItemHandler HeldItemHandler;
     [Export] public PlayerInput PlayerInput;
 
 
@@ -23,7 +23,7 @@ public partial class Player : CharacterBody3D
     [Export] public float MaxBodyTilt = .25f; //Represents how far the HeadTarget can move to in meters
     [Export(PropertyHint.Range, "1.0f, 5.0f")] public float VelocityImpactOnStrideFactor;
 
-    [Export(PropertyHint.Range, "0.0f,1.0f,")] public float StepUpHeight; //Between 0.0 & 1.0m 
+    [Export(PropertyHint.Range, "0.0f,1.0f,")] public float StepUpHeight; //Between 0.0 & 1.0m
     [Export(PropertyHint.Range, "1.0f, 20.0f,")] public float StepUpSpeed;
 
     public Vector3 _stepDownTarget;
@@ -40,8 +40,8 @@ public partial class Player : CharacterBody3D
     int lFootBoneId;
 
     private float _stepProgress;
-    private bool _isStepUp; 
-    
+    private bool _isStepUp;
+
     [Export] public RigidBody3D HeldItem;
 
     private Vector3 _targetVelocity = Vector3.Zero;
@@ -49,38 +49,37 @@ public partial class Player : CharacterBody3D
 
     public AnimationPlayer AnimPlayer;
     private BoneAttachment3D _rHandBoneAttachement;
-    private RigidBody3D _equipped;
 
     [ExportGroup("Camera Settings")]
     [Export(PropertyHint.None, "suffix:\u00ba")] float YRotationMinimum = -70;
     [Export(PropertyHint.None, "suffix:\u00ba")] float YRotationMaximum = 70;
     [Export] float lookAroundSpeed = 10f;
-    [Export]Camera3D Camera;
-	float yawDeg;
+    [Export] Camera3D Camera;
+    float yawDeg;
     float pitchDeg;
 
 
     //Multiplayer -----------------------
-    [Export]   
-	public int PlayerID
-	{
-		get => _playerId;
-		set
-		{
-			_playerId = value;
-			if (GetNodeOrNull<PlayerInput>("PlayerInput") is Node PlayerInputNode)
-			{
-				PlayerInputNode.SetMultiplayerAuthority(value);
-	
-			}
+    [Export]
+    public int PlayerID
+    {
+        get => _playerId;
+        set
+        {
+            _playerId = value;
+            if (GetNodeOrNull<PlayerInput>("PlayerInput") is Node PlayerInputNode)
+            {
+                PlayerInputNode.SetMultiplayerAuthority(value);
 
-			else
-			{
-				GD.PrintErr("PlayerInput node not found!");
-			}
-		}
-	}
-	private int _playerId = 1;
+            }
+
+            else
+            {
+                GD.PrintErr("PlayerInput node not found!");
+            }
+        }
+    }
+    private int _playerId = 1;
     // -----------------------------------------------------
 
 
@@ -100,32 +99,32 @@ public partial class Player : CharacterBody3D
     }
 
     private void SetupCamera()
-	{
-		if (PlayerID == Multiplayer.GetUniqueId())
-		{
-			Camera.Current = true;
-			GD.Print($"Camera activated for player {PlayerID}");
-		}
-	}
+    {
+        if (PlayerID == Multiplayer.GetUniqueId())
+        {
+            Camera.Current = true;
+            GD.Print($"Camera activated for player {PlayerID}");
+        }
+    }
 
     public override void _Input(InputEvent @e)
     {
         if (@e.IsActionPressed("pause")) GetTree().Quit();
 
-		if (@e is InputEventMouseMotion mouseMotion)
-		{ //mouseMotion is a local variable here
-			yawDeg += mouseMotion.Relative.X * (lookAroundSpeed / 100);   
+        if (@e is InputEventMouseMotion mouseMotion)
+        { //mouseMotion is a local variable here
+            yawDeg += mouseMotion.Relative.X * (lookAroundSpeed / 100);
             pitchDeg -= mouseMotion.Relative.Y * (lookAroundSpeed / 100);
             GD.Print(pitchDeg);
 
-			pitchDeg = Mathf.Clamp(pitchDeg, YRotationMinimum, YRotationMaximum);
+            pitchDeg = Mathf.Clamp(pitchDeg, YRotationMinimum, YRotationMaximum);
 
-			Vector3 char_rot = new Godot.Vector3(RotationDegrees.X, -yawDeg, RotationDegrees.Z);
-			Vector3 cam_rot = new Godot.Vector3(pitchDeg, Camera.RotationDegrees.Y, Camera.RotationDegrees.Z);
+            Vector3 char_rot = new Godot.Vector3(RotationDegrees.X, -yawDeg, RotationDegrees.Z);
+            Vector3 cam_rot = new Godot.Vector3(pitchDeg, Camera.RotationDegrees.Y, Camera.RotationDegrees.Z);
 
             RotationDegrees = char_rot;
-			Camera.RotationDegrees = cam_rot;
-		}
+            Camera.RotationDegrees = cam_rot;
+        }
     }
 
     public override void _PhysicsProcess(double delta)
@@ -150,19 +149,19 @@ public partial class Player : CharacterBody3D
         FootMove(delta);
 
         Vector3 avgLocalFtPos = (BoneHandler.GetBoneCachedPose(rFootBoneId).Origin + BoneHandler.GetBoneCachedPose(lFootBoneId).Origin) / 2; // taking avg local foot pos to shift head in that direction along w/ velocity.
-        Vector3 LocalVelocity = GlobalTransform.Basis.Inverse() * Velocity;  
+        Vector3 LocalVelocity = GlobalTransform.Basis.Inverse() * Velocity;
         Vector3 chestTargetNewPosition = new Vector3((avgLocalFtPos.X + LocalVelocity.Normalized().X) * MaxBodyTilt, ChestTarget.Position.Y, (avgLocalFtPos.Z + LocalVelocity.Normalized().Z) * MaxBodyTilt); //Shifts the chest target in accordance w/ velocity. 0 vel is default position
         ChestTarget.Position = ChestTarget.Position.Lerp(chestTargetNewPosition, 10 * (float)delta);
 
     }
-    
+
 
     private void HandleSteps(double delta)
     {
         if (IsStepping) return;
         //GD.Print("HandleSteps Entered");
 
-        Vector3 desiredR = StepHandler.StepDownTargetR + (Velocity * VelocityImpactOnStrideFactor *(float)delta);
+        Vector3 desiredR = StepHandler.StepDownTargetR + (Velocity * VelocityImpactOnStrideFactor * (float)delta);
         Vector3 desiredL = StepHandler.StepDownTargetL + (Velocity * VelocityImpactOnStrideFactor * (float)delta);
 
         float rErr = _rFootPos.DistanceTo(desiredR);
@@ -176,10 +175,10 @@ public partial class Player : CharacterBody3D
 
             _stepDownTarget = CurrFootIsRight ? desiredR
                                                 : desiredL;
-                                                        
-            _footStartPos = CurrFootIsRight ?     RFootIKTarget.GlobalPosition
+
+            _footStartPos = CurrFootIsRight ?   RFootIKTarget.GlobalPosition
                                                 : LFootIKTarget.GlobalPosition;
-                                                
+
             _stepProgress = 0;
             _isStepUp = true;
         }
@@ -193,7 +192,7 @@ public partial class Player : CharacterBody3D
         Marker3D CurrFootIKTarget = CurrFootIsRight ? RFootIKTarget : LFootIKTarget;
 
         _stepProgress = Mathf.Clamp(_stepProgress + StepUpSpeed * (float)delta, 0, 100);
-    
+
         float footHeightOffset = StepUpHeight * (1 - _stepProgress);       //Using cosine as, since we are lerping to the height offset, we shoot up from 0 to the .5 max (or a bit after tbh) immediately and then head down. The foot doesn't draw the same arc as the Cosine here.
 
         CurrFootIKTarget.GlobalPosition = CurrFootIKTarget.GlobalPosition.Lerp(_stepDownTarget + new Vector3(0, footHeightOffset, 0), (FootLerpSpeed + Velocity.Length()) * (float)delta);
@@ -210,16 +209,15 @@ public partial class Player : CharacterBody3D
 
 
 /*
-    Might be able to break the necessesity for tuning player speed, lerp speed etc? It might be easier to 
+    Might be able to break the necessesity for tuning player speed, lerp speed etc? It might be easier to
 
     Implement delta*vel ofset?
     hip rot?
-    different step distance for directions 
+    different step distance for directions
     accel/deccel
     Velocity only during step other just move hips? Torso? (Maybe)
     Ray cast from hips down?
     Sine wave interp for foot up/down movement?
-
 
     I feel like max distance from IK target is an erroneous way to time steps. Ideally, we would want IK target & foot to be synced 24/7 as this means we haven't exceeded the limits of our IK skeleton. need to think about this more.
 */
